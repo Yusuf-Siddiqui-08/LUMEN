@@ -1,0 +1,15 @@
+# Build context for deploy/Dockerfile (and Railpack, which also reads this file).
+# Keep it to things that are never needed to build or run LUMEN.
+**/node_modules
+**/dist
+**/.vite
+**/.vite-temp
+.git
+.gitignore
+.env
+.env.*
+*.log
+npm-debug.log*
+screenshots
+server/data/*
+!server/data/.gitkeep

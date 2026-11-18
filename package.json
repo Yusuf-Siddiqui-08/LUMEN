@@ -1,0 +1,25 @@
+{
+  "name": "lumen-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LUMEN: live seats and noise for every floor of TMU's Student Learning Centre. Decide before you ride.",
+  "workspaces": [
+    "server",
+    "web"
+  ],
+  "engines": {
+    "node": "^22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,web -c blue,yellow \"npm run dev -w server\" \"npm run dev -w web\"",
+    "build": "npm run build -w web && npm run build -w server",
+    "test": "npm run test -w server && npm run test -w web",
+    "start": "npm run start -w server",
+    "start:sim": "npm run start:sim -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "vitest": "^5.1.1",
+    "typescript": "^5.9.3"
+  }
+}

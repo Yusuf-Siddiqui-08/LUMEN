@@ -1,0 +1,350 @@
+{
+  "_readme": "LUMEN floor config. capacity = seats on the floor. zones[].estimate_pct is how full each zone usually is when the whole floor is at zones_at_occupancy_pct; the server scales it with live occupancy and marks it estimated. The simulator block is only used when SIMULATE=1.",
+  "site": {
+    "code": "slc",
+    "name": "Student Learning Centre",
+    "public_url": null
+  },
+  "timezone": "America/Toronto",
+  "nightly_reset_hour": 3,
+  "stale_after_s": 120,
+  "elevator_wait_min": 6,
+  "floors": [
+    {
+      "floor": 8,
+      "vibe": "Quiet",
+      "capacity": 62,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f8-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f8-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f8-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f8-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 38
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 58
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 52
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 55
+        }
+      ],
+      "zones_at_occupancy_pct": 50.0,
+      "simulator": {
+        "seats_free": 31,
+        "noise_db": 36
+      }
+    },
+    {
+      "floor": 7,
+      "vibe": "Quiet",
+      "capacity": 60,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f7-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f7-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f7-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f7-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 34
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 82
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 56
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 71
+        }
+      ],
+      "zones_at_occupancy_pct": 63.3,
+      "simulator": {
+        "seats_free": 22,
+        "noise_db": 42
+      }
+    },
+    {
+      "floor": 6,
+      "vibe": "Social",
+      "capacity": 48,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f6-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f6-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f6-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f6-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 90
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 97
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 95
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 92
+        }
+      ],
+      "zones_at_occupancy_pct": 93.8,
+      "simulator": {
+        "seats_free": 3,
+        "noise_db": 61
+      }
+    },
+    {
+      "floor": 5,
+      "vibe": "Group rooms",
+      "capacity": 30,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f5-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f5-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f5-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f5-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 88
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 96
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 92
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 90
+        }
+      ],
+      "zones_at_occupancy_pct": 93.3,
+      "simulator": {
+        "seats_free": 2,
+        "noise_db": 54
+      }
+    },
+    {
+      "floor": 4,
+      "vibe": "Social",
+      "capacity": 56,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f4-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f4-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f4-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f4-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 100
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 100
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 100
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 100
+        }
+      ],
+      "zones_at_occupancy_pct": 100.0,
+      "simulator": {
+        "seats_free": 0,
+        "noise_db": 66
+      }
+    },
+    {
+      "floor": 3,
+      "vibe": "Collab",
+      "capacity": 40,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f3-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f3-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f3-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f3-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 52
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 74
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 63
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 66
+        }
+      ],
+      "zones_at_occupancy_pct": 65.0,
+      "simulator": {
+        "seats_free": 14,
+        "noise_db": 52
+      }
+    },
+    {
+      "floor": 2,
+      "vibe": "Social",
+      "capacity": 44,
+      "gates": [
+        {
+          "name": "elevator",
+          "node": "f2-gate-elevator"
+        },
+        {
+          "name": "stairs",
+          "node": "f2-gate-stairs"
+        }
+      ],
+      "mics": [
+        {
+          "name": "quiet-side",
+          "node": "f2-mic-quiet"
+        },
+        {
+          "name": "social-side",
+          "node": "f2-mic-social"
+        }
+      ],
+      "zones": [
+        {
+          "name": "Quiet Study",
+          "estimate_pct": 86
+        },
+        {
+          "name": "Group Tables",
+          "estimate_pct": 91
+        },
+        {
+          "name": "Lounge Area",
+          "estimate_pct": 92
+        },
+        {
+          "name": "Computer Area",
+          "estimate_pct": 85
+        }
+      ],
+      "zones_at_occupancy_pct": 88.6,
+      "simulator": {
+        "seats_free": 5,
+        "noise_db": 63
+      }
+    }
+  ]
+}

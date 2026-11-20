@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { useFloors } from '../lib/floors';
 import { useDocumentTitle, useNow } from '../lib/hooks';
@@ -264,6 +265,7 @@ function PhoneDetail({
           })}
         </div>
       )}
+      <FloorPlan floor={f.n} compact />
     </div>
   );
 }

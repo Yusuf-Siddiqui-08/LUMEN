@@ -1,15 +1,20 @@
 /**
- * Simplified floor plans for the TMU Library building (350 Victoria Street), floors 2 and 4 to 8.
- * Traced from the official plans in the TMU Libraries directory:
- * https://library.torontomu.ca/visit-us/library-directory/
+ * Simplified floor plans for the Student Learning Centre (SLC), levels 3 to 8.
  *
- * Coordinates are in "plan units" (the pixel space of the 650 px library plan images).
+ * Levels 5 to 8 are traced from the SLC architectural floor plans (+5 to +8). Their room types match
+ * the SLC floor map: group study rooms, seminar rooms, the multimedia lab, computers and open study.
+ * Levels 3 and 4 have no architectural drawing, so they reuse the typical floorplate and core with an
+ * approximate layout of the spaces the SLC floor map lists for them (marked `schematic`).
+ *
+ * Coordinates are in "plan units" (pixels of the source drawings). Every floor shares the north
+ * service core (stairs, washrooms, four elevators) and the south-east stair with one elevator.
  * The renderer fits the floorplate to its own viewBox, so only relative positions matter.
  */
 
 export type Pt = [number, number];
 
-export type AreaKind = 'room' | 'group' | 'individual' | 'computers';
+/** service: washrooms and storage. room: labs, offices, seminar rooms. studyRoom: bookable group rooms. */
+export type AreaKind = 'service' | 'room' | 'studyRoom' | 'open' | 'casual' | 'computers';
 
 export interface Box {
   x: number;
@@ -21,229 +26,471 @@ export interface Box {
 export interface Area extends Partial<Box> {
   kind: AreaKind;
   label?: string;
-  /** Polygon instead of a box, for L-shaped areas. */
+  /** Polygon instead of a box, for angled areas. */
   pts?: Pt[];
   /** Where to put the label for a polygon area. */
   labelBox?: Box;
 }
 
-export interface Stacks extends Box {
-  /** h: rows run left to right. v: rows run top to bottom. */
-  dir: 'h' | 'v';
-  count: number;
-}
-
-export interface Note {
-  text: string;
-  x: number;
-  y: number;
-  w: number;
+export interface Elevator extends Box {
+  doors: number;
 }
 
 export interface FloorPlan {
   floor: number;
   title: string;
+  /** True when there is no architectural drawing and the layout is approximate. */
+  schematic: boolean;
   plate: Pt[];
   areas: Area[];
-  elevators: Box[];
+  elevators: Elevator[];
   stairs: Box[];
-  fountains: Pt[];
-  stacks: Stacks[];
-  notes: Note[];
   facts: string[];
 }
 
-export const PLAN_SOURCE_URL = 'https://library.torontomu.ca/visit-us/library-directory/';
+const CORE_ROOMS: Area[] = [
+  { kind: 'service', x: 290, y: 25, w: 88, h: 75, label: 'Washrooms' },
+  { kind: 'service', x: 380, y: 25, w: 45, h: 40, label: 'WC' },
+  { kind: 'service', x: 225, y: 68, w: 62, h: 38, label: 'Storage' },
+];
+
+const CORE_ELEVATORS: Elevator[] = [
+  { x: 240, y: 108, w: 125, h: 37, doors: 4 },
+  { x: 362, y: 414, w: 78, h: 26, doors: 1 },
+];
+
+const CORE_STAIRS: Box[] = [
+  { x: 205, y: 22, w: 82, h: 44 },
+  { x: 427, y: 22, w: 51, h: 44 },
+  { x: 362, y: 442, w: 78, h: 36 },
+];
 
 export const FLOOR_PLANS: Record<number, FloorPlan> = {
-  2: {
-    floor: 2,
-    title: '2nd Floor (Main)',
-    plate: [[28, 98], [65, 98], [65, 58], [293, 58], [293, 83], [475, 83], [475, 235], [120, 235], [120, 296], [28, 296]],
+  3: {
+    floor: 3,
+    title: 'Level 3',
+    schematic: true,
+    plate: [
+      [35, 72],
+      [200, 45],
+      [200, 18],
+      [478, 18],
+      [478, 548],
+      [75, 556],
+    ],
     areas: [
-      { kind: 'room', x: 80, y: 76, w: 42, h: 44, label: 'Research Help' },
-      { kind: 'room', x: 186, y: 62, w: 52, h: 56, label: 'Teaching & Computer Lab LIB 272A' },
-      { kind: 'room', x: 243, y: 65, w: 38, h: 64, label: 'Materials ConneXion LIB 272B' },
-      { kind: 'group', x: 285, y: 95, w: 20, h: 18 },
       {
-        kind: 'computers',
-        pts: [[248, 160], [320, 160], [320, 110], [400, 110], [400, 195], [248, 195]],
-        label: 'Desktop Computers',
-        labelBox: { x: 325, y: 130, w: 70, h: 30 },
+        kind: 'open',
+        pts: [
+          [38, 75],
+          [198, 48],
+          [198, 150],
+          [476, 150],
+          [476, 546],
+          [77, 553],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 120, y: 470, w: 200, h: 40 },
       },
-      { kind: 'room', x: 410, y: 112, w: 58, h: 83, label: 'Geospatial, Map & Data Centre' },
-      { kind: 'room', x: 35, y: 178, w: 23, h: 14 },
-      { kind: 'room', x: 32, y: 198, w: 26, h: 94, label: 'Circulation' },
-      { kind: 'room', x: 193, y: 158, w: 35, h: 42, label: 'Help & Printers' },
-      { kind: 'group', x: 190, y: 210, w: 210, h: 12 },
+      ...CORE_ROOMS,
+      {
+        kind: 'room',
+        x: 70,
+        y: 170,
+        w: 150,
+        h: 120,
+        label: 'Digital Media Experience',
+      },
+      { kind: 'room', x: 260, y: 200, w: 180, h: 110, label: 'Launch Zone' },
+      {
+        kind: 'casual',
+        x: 120,
+        y: 340,
+        w: 200,
+        h: 70,
+        label: 'Open study tables',
+      },
     ],
-    elevators: [{ x: 35, y: 130, w: 70, h: 40 }],
-    stairs: [{ x: 105, y: 130, w: 20, h: 40 }],
-    fountains: [[322, 112], [73, 282]],
-    stacks: [],
-    notes: [
-      { text: 'Entrance from SLC', x: 126, y: 64, w: 56 },
-      { text: 'Book Return', x: 60, y: 179, w: 42 },
-      { text: 'Exit only', x: 140, y: 198, w: 50 },
-      { text: 'Entrance from Library building', x: 66, y: 250, w: 52 },
-    ],
-    facts: [
-      'Main floor with two entrances: east (from Nelson Mandela Way) and west (from the Student Learning Centre)',
-      'Circulation Desk by the east entrance, Research Help Desk by the west entrance',
-      'Information Desk and the Ronald D. Besse Information and Learning Commons in the central area',
-      'Geospatial, Map and Data Centre and Material ConneXion',
-      'Washrooms next to the central staircase, two bottle-filling fountains',
-    ],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
+    facts: ['Digital Media Experience', 'Launch Zone', 'Open study space'],
   },
   4: {
     floor: 4,
-    title: '4th Floor',
-    plate: [[148, 20], [458, 20], [458, 272], [268, 272], [268, 305], [148, 305]],
+    title: 'Level 4',
+    schematic: true,
+    plate: [
+      [35, 72],
+      [200, 45],
+      [200, 18],
+      [478, 18],
+      [478, 548],
+      [75, 556],
+    ],
     areas: [
-      { kind: 'room', x: 170, y: 32, w: 54, h: 22, label: 'Washroom' },
-      { kind: 'room', x: 229, y: 32, w: 36, h: 22, label: 'WC' },
-      { kind: 'room', x: 270, y: 30, w: 52, h: 26, label: 'Accessible WC' },
-      { kind: 'room', x: 332, y: 78, w: 110, h: 127, label: 'Special Collections (by appointment)' },
-      { kind: 'room', x: 160, y: 153, w: 102, h: 132, label: 'Archives & Special Collections Reading Room' },
-      { kind: 'individual', x: 272, y: 152, w: 41, h: 126, label: 'Individual study' },
       {
-        kind: 'group',
-        pts: [[327, 235], [440, 205], [452, 262], [327, 262]],
-        label: 'Group study',
-        labelBox: { x: 335, y: 228, w: 105, h: 30 },
+        kind: 'open',
+        pts: [
+          [38, 75],
+          [198, 48],
+          [198, 150],
+          [476, 150],
+          [476, 546],
+          [77, 553],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 150, y: 490, w: 180, h: 40 },
+      },
+      ...CORE_ROOMS,
+      {
+        kind: 'room',
+        x: 230,
+        y: 165,
+        w: 120,
+        h: 50,
+        label: 'One-Stop reception',
+      },
+      {
+        kind: 'room',
+        x: 60,
+        y: 170,
+        w: 150,
+        h: 150,
+        label: 'Student Learning Support offices',
+      },
+      { kind: 'room', x: 370, y: 190, w: 100, h: 70, label: 'Writing support' },
+      { kind: 'room', x: 370, y: 270, w: 100, h: 70, label: 'Math support' },
+      {
+        kind: 'room',
+        x: 230,
+        y: 240,
+        w: 120,
+        h: 90,
+        label: 'Library learning services',
+      },
+      {
+        kind: 'room',
+        x: 95,
+        y: 360,
+        w: 230,
+        h: 60,
+        label: 'Study skills and transitions',
       },
     ],
-    elevators: [{ x: 168, y: 88, w: 90, h: 40 }],
-    stairs: [{ x: 258, y: 88, w: 27, h: 40 }],
-    fountains: [[183, 73]],
-    stacks: [],
-    notes: [],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
     facts: [
-      'A quiet floor with open seating, windows and natural light',
-      'TMU Archives and Special Collections, including the reading room',
-      'No group study rooms here, bookable rooms are on floors 5 to 9',
-      'Swivel chairs, collaborative tables with built-in outlets and two height-adjustable tables',
-      "Men's, women's and all-gender accessible washrooms",
+      'Student Learning Support: academic accommodation, English language, math and writing support',
+      'Help for graduate students, study skills and transitions support',
+      'One-Stop reception and Student Learning Support offices',
+      'Library learning services',
     ],
   },
   5: {
     floor: 5,
-    title: '5th Floor',
-    plate: [[198, 22], [445, 22], [445, 100], [482, 100], [482, 182], [445, 182], [445, 268], [250, 268], [250, 318], [115, 318], [115, 195], [198, 195]],
+    title: 'Level 5',
+    schematic: false,
+    plate: [
+      [35, 66],
+      [200, 66],
+      [200, 18],
+      [478, 18],
+      [478, 551],
+      [92, 554],
+    ],
     areas: [
-      { kind: 'room', x: 205, y: 32, w: 46, h: 20, label: 'Washroom' },
-      { kind: 'room', x: 255, y: 32, w: 46, h: 20, label: 'Washroom' },
-      { kind: 'room', x: 390, y: 30, w: 42, h: 60, label: 'Group Study Rooms' },
-      { kind: 'room', x: 390, y: 200, w: 42, h: 62, label: 'Group Study Rooms' },
-      { kind: 'individual', x: 410, y: 108, w: 68, h: 24, label: 'Individual study' },
-      { kind: 'individual', x: 125, y: 200, w: 60, h: 92, label: 'Individual study' },
-      { kind: 'group', x: 325, y: 32, w: 20, h: 18 },
-      { kind: 'group', x: 243, y: 135, w: 29, h: 15 },
+      {
+        kind: 'open',
+        pts: [
+          [38, 69],
+          [198, 69],
+          [198, 150],
+          [475, 150],
+          [475, 549],
+          [94, 551],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 300, y: 490, w: 150, h: 40 },
+      },
+      ...CORE_ROOMS,
+      { kind: 'computers', x: 60, y: 180, w: 110, h: 60, label: 'Computers' },
+      {
+        kind: 'room',
+        pts: [
+          [90, 304],
+          [175, 254],
+          [300, 429],
+          [170, 509],
+        ],
+        label: 'Seminar rooms',
+        labelBox: { x: 135, y: 380, w: 110, h: 40 },
+      },
+      {
+        kind: 'room',
+        pts: [
+          [230, 214],
+          [277, 171],
+          [368, 254],
+          [330, 289],
+        ],
+        label: 'Multimedia lab',
+        labelBox: { x: 255, y: 220, w: 90, h: 36 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [180, 249],
+          [212, 226],
+          [338, 399],
+          [305, 424],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 215, y: 320, w: 60, h: 36 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [300, 319],
+          [368, 259],
+          [430, 349],
+          [362, 399],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 330, y: 325, w: 70, h: 36 },
+      },
+      { kind: 'casual', x: 95, y: 470, w: 70, h: 50, label: 'Casual seating' },
     ],
-    elevators: [{ x: 207, y: 83, w: 65, h: 35 }],
-    stairs: [{ x: 272, y: 83, w: 33, h: 35 }],
-    fountains: [[217, 68]],
-    stacks: [
-      { x: 355, y: 30, w: 30, h: 70, dir: 'h', count: 9 },
-      { x: 290, y: 158, w: 95, h: 82, dir: 'h', count: 9 },
-      { x: 245, y: 158, w: 40, h: 82, dir: 'h', count: 9 },
-      { x: 420, y: 140, w: 55, h: 30, dir: 'h', count: 3 },
-      { x: 190, y: 218, w: 38, h: 72, dir: 'v', count: 5 },
-    ],
-    notes: [],
-    facts: [
-      'Quiet individual and group study',
-      'Books A to HC, audiovisual collection, microforms and back issues',
-      'Six bookable group study rooms for 4, 6 or 8 people',
-      'Study carrels with outlets and lamps, plus armchairs',
-      'FCS Academic Support Centre and learning strategist offices',
-    ],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
+    facts: ['Casual seating', 'Collaborative and group work rooms', 'Open study space', 'Seminar rooms'],
   },
   6: {
     floor: 6,
-    title: '6th Floor',
-    plate: [[150, 28], [470, 28], [470, 285], [285, 285], [285, 305], [150, 305]],
+    title: 'Level 6',
+    schematic: false,
+    plate: [
+      [35, 72],
+      [200, 45],
+      [200, 18],
+      [478, 18],
+      [478, 548],
+      [75, 556],
+    ],
     areas: [
-      { kind: 'individual', x: 163, y: 48, w: 52, h: 67, label: 'Individual study' },
-      { kind: 'room', x: 230, y: 34, w: 46, h: 20, label: 'Washroom' },
-      { kind: 'room', x: 280, y: 34, w: 46, h: 20, label: 'Washroom' },
-      { kind: 'group', x: 350, y: 35, w: 18, h: 18 },
-      { kind: 'room', x: 440, y: 35, w: 30, h: 87, label: 'Group Rooms' },
-      { kind: 'individual', x: 160, y: 215, w: 165, h: 77, label: 'Individual study' },
-      { kind: 'room', x: 345, y: 215, w: 85, h: 28, label: 'Teaching Lab LIB 667A' },
+      {
+        kind: 'open',
+        pts: [
+          [38, 75],
+          [198, 48],
+          [198, 150],
+          [476, 150],
+          [476, 546],
+          [77, 553],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 280, y: 200, w: 170, h: 40 },
+      },
+      ...CORE_ROOMS,
+      {
+        kind: 'casual',
+        pts: [
+          [50.8, 129.2],
+          [200.8, 279.2],
+          [219.2, 260.8],
+          [69.2, 110.8],
+        ],
+        label: 'Casual seating',
+        labelBox: { x: 95, y: 180, w: 80, h: 30 },
+      },
+      {
+        kind: 'casual',
+        pts: [
+          [46.6, 214.9],
+          [321.6, 449.9],
+          [338.4, 430.1],
+          [63.4, 195.1],
+        ],
+      },
+      {
+        kind: 'casual',
+        pts: [
+          [51.2, 309.6],
+          [291.2, 529.6],
+          [308.8, 510.4],
+          [68.8, 290.4],
+        ],
+      },
+      {
+        kind: 'casual',
+        pts: [
+          [71.0, 409.4],
+          [191.0, 524.4],
+          [209.0, 505.6],
+          [89.0, 390.6],
+        ],
+      },
+      {
+        kind: 'casual',
+        pts: [
+          [104.6, 167.2],
+          [229.6, 262.2],
+          [240.4, 247.8],
+          [115.4, 152.8],
+        ],
+      },
     ],
-    elevators: [{ x: 233, y: 85, w: 72, h: 33 }],
-    stairs: [{ x: 305, y: 85, w: 27, h: 33 }],
-    fountains: [[238, 70]],
-    stacks: [
-      { x: 392, y: 38, w: 40, h: 90, dir: 'h', count: 8 },
-      { x: 168, y: 140, w: 262, h: 55, dir: 'v', count: 22 },
-    ],
-    notes: [],
-    facts: [
-      'Individual, quiet study floor with windows and natural light',
-      'Books with call numbers HD to HT',
-      'Computer lab LIB667A with 25 drop-in computers',
-      'Three bookable group study rooms',
-      'Study carrels with outlets and USB ports, plus enclosed study pods',
-    ],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
+    facts: ['Casual seating', 'Collaborative work space', 'Open study space'],
   },
   7: {
     floor: 7,
-    title: '7th Floor',
-    plate: [[140, 22], [470, 22], [470, 195], [425, 195], [425, 300], [140, 300]],
+    title: 'Level 7',
+    schematic: false,
+    plate: [
+      [35, 70],
+      [200, 70],
+      [200, 18],
+      [478, 18],
+      [478, 548],
+      [78, 548],
+    ],
     areas: [
-      { kind: 'individual', x: 152, y: 32, w: 53, h: 63, label: 'Individual study' },
-      { kind: 'room', x: 225, y: 34, w: 40, h: 18, label: 'Washroom' },
-      { kind: 'room', x: 268, y: 34, w: 40, h: 18, label: 'Washroom' },
-      { kind: 'group', x: 350, y: 35, w: 18, h: 17 },
-      { kind: 'room', x: 432, y: 38, w: 23, h: 84, label: 'Group Rooms' },
-      { kind: 'individual', x: 150, y: 215, w: 270, h: 80, label: 'Individual study' },
+      {
+        kind: 'open',
+        pts: [
+          [38, 73],
+          [198, 73],
+          [198, 150],
+          [476, 150],
+          [476, 546],
+          [80, 546],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 90, y: 440, w: 150, h: 40 },
+      },
+      ...CORE_ROOMS,
+      {
+        kind: 'studyRoom',
+        pts: [
+          [148, 182],
+          [205, 168],
+          [285, 285],
+          [228, 305],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 180, y: 215, w: 70, h: 40 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [318, 235],
+          [470, 180],
+          [476, 245],
+          [330, 300],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 350, y: 225, w: 100, h: 36 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [80, 300],
+          [240, 290],
+          [255, 350],
+          [90, 395],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 110, y: 315, w: 110, h: 40 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [225, 350],
+          [290, 340],
+          [355, 505],
+          [285, 525],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 255, y: 410, w: 60, h: 40 },
+      },
+      { kind: 'computers', x: 262, y: 168, w: 80, h: 50, label: 'Computers' },
+      { kind: 'computers', x: 340, y: 312, w: 110, h: 70, label: 'Computers' },
     ],
-    elevators: [{ x: 222, y: 85, w: 76, h: 33 }],
-    stairs: [{ x: 298, y: 85, w: 24, h: 33 }],
-    fountains: [[225, 70]],
-    stacks: [
-      { x: 352, y: 38, w: 63, h: 90, dir: 'h', count: 8 },
-      { x: 155, y: 140, w: 265, h: 55, dir: 'v', count: 24 },
-    ],
-    notes: [],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
     facts: [
-      'Individual, quiet study floor with varied seating',
-      'Books with call numbers HV to PN1995',
-      'Four bookable group study rooms, LIB762 has an LCD monitor',
-      'Individual carrels with outlets and USB ports, plus countertop seating',
-      'Accessible pod in the southwest quadrant, near the all-gender washroom',
+      'Collaborative and group work rooms',
+      'Collaborative work space',
+      'Graduate study space',
+      'Open study space',
+      'Silent study space',
     ],
   },
   8: {
     floor: 8,
-    title: '8th Floor',
-    plate: [[145, 22], [462, 22], [462, 300], [250, 300], [250, 312], [145, 312]],
+    title: 'Level 8',
+    schematic: false,
+    plate: [
+      [32, 70],
+      [200, 70],
+      [200, 18],
+      [478, 18],
+      [478, 505],
+      [445, 540],
+      [75, 540],
+    ],
     areas: [
-      { kind: 'room', x: 186, y: 32, w: 46, h: 24, label: 'Accessible WC' },
-      { kind: 'room', x: 236, y: 32, w: 44, h: 24, label: 'Washroom' },
-      { kind: 'room', x: 284, y: 32, w: 44, h: 24, label: 'Washroom' },
-      { kind: 'room', x: 345, y: 35, w: 110, h: 24, label: 'Group Study Rooms' },
-      { kind: 'room', x: 318, y: 270, w: 137, h: 28, label: 'Group Study Rooms' },
-      { kind: 'individual', x: 153, y: 66, w: 22, h: 219 },
-      { kind: 'group', x: 190, y: 165, w: 75, h: 105, label: 'Group study' },
+      {
+        kind: 'open',
+        pts: [
+          [35, 73],
+          [198, 73],
+          [198, 150],
+          [475, 150],
+          [475, 503],
+          [443, 538],
+          [77, 538],
+        ],
+        label: 'Open study space',
+        labelBox: { x: 110, y: 430, w: 150, h: 40 },
+      },
+      ...CORE_ROOMS,
+      {
+        kind: 'casual',
+        x: 128,
+        y: 74,
+        w: 70,
+        h: 36,
+        label: 'Casual study space',
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [75, 128],
+          [110, 95],
+          [245, 235],
+          [212, 275],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 125, y: 165, w: 70, h: 40 },
+      },
+      {
+        kind: 'studyRoom',
+        pts: [
+          [248, 305],
+          [285, 268],
+          [405, 370],
+          [370, 410],
+        ],
+        label: 'Group rooms',
+        labelBox: { x: 295, y: 315, w: 70, h: 40 },
+      },
+      { kind: 'computers', x: 262, y: 180, w: 75, h: 55, label: 'Computers' },
     ],
-    elevators: [{ x: 188, y: 95, w: 74, h: 37 }],
-    stairs: [{ x: 262, y: 95, w: 23, h: 37 }],
-    fountains: [[197, 76]],
-    stacks: [
-      { x: 350, y: 82, w: 80, h: 70, dir: 'h', count: 6 },
-      { x: 280, y: 170, w: 140, h: 85, dir: 'v', count: 10 },
-    ],
-    notes: [],
-    facts: [
-      'Group study floor with a green (plant) wall and natural light',
-      '12 bookable group study rooms for 4, 6 or 8 people, with LCD monitors',
-      'Books with call numbers PN1996 to PS7999',
-      'Study carrels with outlets, USB ports and LED lamps',
-      'Collaborative tables with built-in outlets in the central area',
-    ],
+    elevators: CORE_ELEVATORS,
+    stairs: CORE_STAIRS,
+    facts: ['Casual study space', 'Collaborative and group work rooms', 'Collaborative work space', 'Open study areas'],
   },
 };
 

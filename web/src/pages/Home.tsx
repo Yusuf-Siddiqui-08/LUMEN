@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { Wordmark } from '../components/Logo';
 import { useFloors } from '../lib/floors';
@@ -337,6 +338,8 @@ export default function Home() {
                 />
               )}
             </div>
+
+            {showDetail && selected && <FloorPlan floor={selected.n} compact={isPhone} />}
           </section>
 
           <section style={{ padding: '72px 0 24px', display: 'flex', flexDirection: 'column', gap: 28 }}>

@@ -53,8 +53,10 @@ lumen-site/
 │   ├── src/persistence.ts  saved gate baselines (JSON) + optional SQLite history
 │   └── test/               Vitest
 ├── web/                    Vite + React + TypeScript + React Router
+│   ├── src/components/     floor plan, peak-hour charts, QR code, kiosk frame
+│   ├── src/data/           sample typical-weekday data (peakHours.json)
 │   ├── src/pages/          Home, hardware/, Lobby, FloorScreen, Phone
-│   ├── src/lib/            logic (recommendation rule etc.), live data hook
+│   ├── src/lib/            logic (recommendation rule etc.), peak-hour helpers, live data hook
 │   └── test/
 └── screenshots/
 ```
@@ -135,6 +137,25 @@ noise_db   = median of the floor's mics' latest leq_db
 - **Zones** are configured estimates scaled by floor occupancy (`estimated: true`). A full floor shows every zone full.
 - **Recommendation** (web): the closest floor (lowest number) with at least 15 free seats, otherwise the
   matching floor with the most free seats. Stale floors are never recommended.
+
+## Peak hours data
+
+`web/src/data/peakHours.json` holds typical-weekday hourly foot traffic and noise levels from 7 AM to 11 PM for floors 2 to 8. It powers the two charts under the floor detail view on `/` and `/phone`, and is clearly labelled on screen as `"Typical weekday · sample data"`.
+
+The current values are made-up sample data (`"source": "sample"`), not measured sensor data. Later, a MATLAB script will compute real hourly averages from logged sensor history and regenerate `web/src/data/peakHours.json` in this exact shape:
+
+```json
+{
+  "source": "sample",
+  "description": "Typical weekday, made-up sample data, not measured",
+  "hours": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+  "floors": {
+    "7": { "people": [3, 11, 22, ...], "noise_db": [34.4, 36.1, 38.2, ...] }
+  }
+}
+```
+
+Each floor entry has 17 whole-number occupancy values (`people`) and 17 one-decimal decibel values (`noise_db`) matching the 17 hours in `hours`.
 
 ## MQTT reference
 

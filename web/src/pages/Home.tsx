@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { Wordmark } from '../components/Logo';
+import { PeakHoursCharts } from '../components/PeakHoursCharts';
 import { useFloors } from '../lib/floors';
 import { useDocumentTitle, useMediaQuery, useNow } from '../lib/hooks';
 import {
@@ -338,6 +339,8 @@ export default function Home() {
                 />
               )}
             </div>
+
+            {showDetail && selected && <PeakHoursCharts floor={selected.n} seats={selected.cap} compact={isPhone} />}
 
             {showDetail && selected && <FloorPlan floor={selected.n} compact={isPhone} />}
           </section>

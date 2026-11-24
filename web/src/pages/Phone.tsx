@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
+import { PeakHoursCharts } from '../components/PeakHoursCharts';
 import { useFloors } from '../lib/floors';
 import { useDocumentTitle, useNow } from '../lib/hooks';
 import {
@@ -265,6 +266,7 @@ function PhoneDetail({
           })}
         </div>
       )}
+      <PeakHoursCharts floor={f.n} seats={f.cap} compact />
       <FloorPlan floor={f.n} compact />
     </div>
   );

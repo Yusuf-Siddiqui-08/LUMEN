@@ -205,10 +205,10 @@ export default function Home() {
               background: '#0A2150',
               border: '1px solid rgba(117,173,234,0.22)',
               borderRadius: 22,
-              padding: 24,
+              padding: 20,
               display: 'flex',
               flexDirection: 'column',
-              gap: 20,
+              gap: 16,
               scrollMarginTop: 12,
             }}
           >
@@ -295,7 +295,7 @@ export default function Home() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
               {showList && (
                 <div style={{ flex: '1 1 440px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div aria-hidden="true" style={{ display: 'flex', gap: 16, padding: '0 20px', ...label(12, { color: '#9FB3DA' }) }}>
@@ -646,10 +646,10 @@ function FloorDetail({
         background: '#132952',
         border: '1px solid rgba(117,173,234,0.22)',
         borderRadius: 18,
-        padding: 24,
+        padding: 20,
         display: 'flex',
         flexDirection: 'column',
-        gap: 16,
+        gap: 12,
       }}
     >
       {isPhone && (
@@ -706,8 +706,8 @@ function FloorDetail({
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '18px 20px', borderRadius: 16, border: `2px solid ${accent}`, background: accentBg }}>
-        <span style={{ fontSize: 72, fontWeight: 900, lineHeight: 0.9, color: accent, fontVariantNumeric: 'tabular-nums' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', borderRadius: 16, border: `2px solid ${accent}`, background: accentBg }}>
+        <span style={{ fontSize: 64, fontWeight: 900, lineHeight: 0.9, color: accent, fontVariantNumeric: 'tabular-nums' }}>
           {full ? 'FULL' : f.free}
         </span>
         <span style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -722,8 +722,8 @@ function FloorDetail({
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', background: '#19356B', borderRadius: 14 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', background: '#19356B', borderRadius: 14 }}>
           <span style={label(12)}>NOISE LEVEL</span>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10 }}>
             <span style={{ fontSize: 30, fontWeight: 900, lineHeight: 1 }}>{f.db === null ? '–' : `${f.db} dB`}</span>
@@ -745,7 +745,7 @@ function FloorDetail({
           </div>
           <span style={{ fontSize: 13, color: '#C9D6EE' }}>{f.db === null ? 'No reading yet' : dbWord(f.db)}</span>
         </div>
-        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 8, padding: '14px 16px', background: '#19356B', borderRadius: 14 }}>
+        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 6, padding: '12px 14px', background: '#19356B', borderRadius: 14 }}>
           <span style={label(12)}>GETTING THERE</span>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontSize: 15 }}>Elevator</span>
@@ -768,14 +768,14 @@ function FloorDetail({
       </div>
 
       {f.zones.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <span style={label(12)}>
             ZONES <span style={{ color: '#9FB3DA' }}>· ESTIMATED</span>
           </span>
           {f.zones.map((z) => {
             const [word, color] = zoneStatus(z.pct);
             return (
-              <div key={z.name} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 36 }}>
+              <div key={z.name} style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 30 }}>
                 <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: '50%', flex: 'none', background: color }} />
                 <span style={{ flex: 1, fontSize: 16 }}>{z.name}</span>
                 <span style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>{z.pct}%</span>
@@ -818,8 +818,8 @@ function FloorDetail({
                     flexDirection: 'column',
                     justifyContent: 'center',
                     gap: 2,
-                    minHeight: 58,
-                    padding: '10px 12px',
+                    minHeight: 50,
+                    padding: '8px 12px',
                     borderRadius: 10,
                     background: ZONE_TILE[k % ZONE_TILE.length],
                     border: `3px solid ${isBest ? GOLD : 'transparent'}`,

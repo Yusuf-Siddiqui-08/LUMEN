@@ -56,7 +56,7 @@ export default function Phone() {
           boxSizing: 'border-box',
           minHeight: '100vh',
           margin: '0 auto',
-          padding: '28px 20px 24px',
+          padding: '20px 16px 20px',
           display: 'flex',
           flexDirection: 'column',
           color: '#FFFFFF',
@@ -173,7 +173,7 @@ function PhoneDetail({
   const best = pickFor('All', floors.filter((x) => x.n !== f.n));
   const meter = f.db === null ? null : noiseMeter(f.db);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <button
         ref={backRef}
         type="button"

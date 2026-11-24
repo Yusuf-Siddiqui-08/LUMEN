@@ -25,23 +25,23 @@ const DEFAULT_SEATS: Record<number, number> = {
 
 const LATO = "Lato, 'Helvetica Neue', Arial, sans-serif";
 
-const cardStyle: CSSProperties = {
+const cardStyle = (compact: boolean): CSSProperties => ({
   background: '#132952',
   border: '1px solid rgba(117,173,234,0.24)',
-  borderRadius: 16,
-  padding: '18px 18px 16px',
+  borderRadius: 14,
+  padding: compact ? '12px 12px 10px' : '14px 16px 12px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 10,
+  gap: 6,
   minWidth: 0,
   boxSizing: 'border-box',
-};
+});
 
 const monoLabel = (size = 12, color = MUTED): CSSProperties => ({
   fontFamily: MONO,
   fontVariantLigatures: 'none',
   fontSize: size,
-  letterSpacing: '0.06em',
+  letterSpacing: '0.05em',
   color,
 });
 
@@ -71,14 +71,14 @@ function ChartHeader({
   sentence: string;
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '4px 10px' }}>
-        <span style={monoLabel(12, MUTED_2)}>{kicker}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2px 8px' }}>
+        <span style={monoLabel(11.5, MUTED_2)}>{kicker}</span>
         <span
           style={{
             ...monoLabel(11, GOLD),
-            letterSpacing: '0.04em',
-            padding: '2px 8px',
+            letterSpacing: '0.03em',
+            padding: '1px 7px',
             borderRadius: 999,
             border: '1px solid rgba(244,182,1,0.45)',
             background: 'rgba(244,182,1,0.08)',
@@ -87,7 +87,7 @@ function ChartHeader({
           Typical weekday · sample data
         </span>
       </div>
-      <p style={{ margin: 0, fontSize: 16, fontWeight: 700, lineHeight: 1.35, color: '#FFFFFF' }}>{sentence}</p>
+      <p style={{ margin: 0, fontSize: 15.5, fontWeight: 700, lineHeight: 1.3, color: '#FFFFFF' }}>{sentence}</p>
     </div>
   );
 }
@@ -109,12 +109,12 @@ function FootTrafficChart({
   const peakPeople = data.people[peakIdx] ?? 0;
   const sentence = `Busiest around ${formatHour(peakH)}, about ${peakPeople} of ${seats} seats taken`;
 
-  const W = compact ? 284 : 500;
-  const H = compact ? 216 : 226;
-  const plotLeft = compact ? 30 : 40;
-  const plotRight = W - (compact ? 8 : 12);
-  const plotTop = 32;
-  const plotBottom = H - 28;
+  const W = compact ? 286 : 500;
+  const H = compact ? 176 : 188;
+  const plotLeft = compact ? 28 : 36;
+  const plotRight = W - (compact ? 6 : 10);
+  const plotTop = 24;
+  const plotBottom = H - 20;
   const plotW = plotRight - plotLeft;
   const plotH = plotBottom - plotTop;
 
@@ -124,15 +124,16 @@ function FootTrafficChart({
   const yOf = (v: number) => plotBottom - (v / yMax) * plotH;
 
   const slotW = plotW / hours.length;
-  const barW = Math.max(8, Math.min(20, slotW * 0.66));
+  const barW = Math.max(8, Math.min(20, slotW * 0.68));
   const peakCenter = plotLeft + (peakIdx + 0.5) * slotW;
   const peakPos = clampAnchor(peakIdx, hours.length, peakCenter, plotLeft, plotRight);
   const peakY = yOf(peakPeople);
 
   const fontSize = 11.5;
+  const unitOnRight = peakIdx <= 2;
 
   return (
-    <article style={cardStyle}>
+    <article style={cardStyle(compact)}>
       <ChartHeader kicker="FOOT TRAFFIC BY HOUR" sentence={sentence} />
       <svg
         role="img"
@@ -141,7 +142,14 @@ function FootTrafficChart({
         width="100%"
         style={{ display: 'block', width: '100%', height: 'auto' }}
       >
-        <text x={plotLeft} y={14} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="start">
+        <text
+          x={unitOnRight ? plotRight : plotLeft}
+          y={13}
+          fontFamily={MONO}
+          fontSize={fontSize}
+          fill={MUTED}
+          textAnchor={unitOnRight ? 'end' : 'start'}
+        >
           people
         </text>
 
@@ -159,7 +167,7 @@ function FootTrafficChart({
                 strokeDasharray={isCap ? '4 4' : undefined}
                 strokeWidth={1}
               />
-              <text x={plotLeft - 6} y={y + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+              <text x={plotLeft - 5} y={y + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
                 {tick}
               </text>
             </g>
@@ -175,27 +183,26 @@ function FootTrafficChart({
           const color = seatColor(free);
           const isPeak = i === peakIdx;
           return (
-            <g key={hours[i]}>
-              <rect
-                x={x}
-                y={y}
-                width={barW}
-                height={h}
-                rx={2.5}
-                fill={color}
-                fillOpacity={isPeak ? 1 : 0.88}
-                stroke={isPeak ? '#FFFFFF' : undefined}
-                strokeWidth={isPeak ? 1.8 : 0}
-              >
-                <title>{`${formatHour(hours[i])}: ${count} of ${seats} seats taken`}</title>
-              </rect>
-            </g>
+            <rect
+              key={hours[i]}
+              x={x}
+              y={y}
+              width={barW}
+              height={h}
+              rx={2.5}
+              fill={color}
+              fillOpacity={isPeak ? 1 : 0.88}
+              stroke={isPeak ? '#FFFFFF' : undefined}
+              strokeWidth={isPeak ? 1.8 : 0}
+            >
+              <title>{`${formatHour(hours[i])}: ${count} of ${seats} seats taken`}</title>
+            </rect>
           );
         })}
 
         <text
           x={peakPos.x}
-          y={Math.max(15, peakY - 9)}
+          y={Math.max(12, peakY - 7)}
           fontFamily={LATO}
           fontSize={fontSize}
           fontWeight={900}
@@ -216,7 +223,7 @@ function FootTrafficChart({
             <text
               key={h}
               x={tx}
-              y={H - 8}
+              y={H - 5}
               fontFamily={LATO}
               fontSize={fontSize}
               fontWeight={i === peakIdx ? 700 : 400}
@@ -229,18 +236,18 @@ function FootTrafficChart({
         })}
       </svg>
 
-      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', fontSize: 12, color: MUTED }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: GREEN }} />
-          10+ seats free
+      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: MUTED }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 9, height: 9, borderRadius: 2, background: GREEN }} />
+          10+ free
         </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: GOLD }} />
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 9, height: 9, borderRadius: 2, background: GOLD }} />
           Under 10 free
         </span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: RED }} />
-          Full ({seats} seats)
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 9, height: 9, borderRadius: 2, background: RED }} />
+          Full ({seats})
         </span>
       </div>
 
@@ -284,18 +291,19 @@ function NoiseChart({
   const quietDb = data.noise_db[quietIdx] ?? 0;
   const sentence = `Quietest around ${formatHour(quietH)}, about ${Math.round(quietDb)} dB`;
 
-  const W = compact ? 284 : 500;
-  const H = compact ? 216 : 226;
-  const plotLeft = compact ? 30 : 40;
-  const plotRight = W - (compact ? 8 : 12);
-  const plotTop = 32;
-  const plotBottom = H - 28;
+  const W = compact ? 286 : 500;
+  const H = compact ? 176 : 188;
+  const plotLeft = compact ? 28 : 36;
+  const plotRight = W - (compact ? 6 : 10);
+  const plotTop = 24;
+  const plotBottom = H - 20;
   const plotW = plotRight - plotLeft;
   const plotH = plotBottom - plotTop;
 
-  const yMin = 25;
-  const maxDb = Math.max(...data.noise_db, 65);
-  const yMax = Math.max(70, Math.ceil(maxDb / 5) * 5);
+  const minDb = Math.min(...data.noise_db);
+  const maxDb = Math.max(...data.noise_db);
+  const yMin = Math.max(25, Math.min(40, Math.floor((minDb - 6) / 5) * 5));
+  const yMax = Math.max(65, Math.ceil((maxDb + 4) / 5) * 5);
   const yOf = (db: number) => plotBottom - ((db - yMin) / (yMax - yMin)) * plotH;
 
   const y45 = yOf(45);
@@ -314,12 +322,12 @@ function NoiseChart({
 
   const quietPt = points[quietIdx];
   const quietPos = clampAnchor(quietIdx, hours.length, quietPt.x, plotLeft, plotRight);
-  const quietLabelY = quietPt.y + 17 <= yBot - 5 ? quietPt.y + 17 : quietPt.y - 12;
+  const quietLabelY = quietPt.y + 16 <= yBot - 4 ? quietPt.y + 16 : quietPt.y - 11;
 
   const fontSize = 11.5;
 
   return (
-    <article style={cardStyle}>
+    <article style={cardStyle(compact)}>
       <ChartHeader kicker="NOISE BY HOUR" sentence={sentence} />
       <svg
         role="img"
@@ -333,47 +341,47 @@ function NoiseChart({
         <rect x={plotLeft} y={y60} width={plotW} height={y45 - y60} fill={GOLD} fillOpacity={0.07} />
         <rect x={plotLeft} y={y45} width={plotW} height={yBot - y45} fill={GREEN} fillOpacity={0.08} />
 
-        <text x={plotLeft} y={14} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="start">
+        <text x={plotLeft} y={13} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="start">
           dB
         </text>
 
         {/* Bottom and top bounds */}
         <line x1={plotLeft} y1={yBot} x2={plotRight} y2={yBot} stroke="rgba(117,173,234,0.22)" strokeWidth={1} />
-        <text x={plotLeft - 6} y={yBot + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+        <text x={plotLeft - 5} y={yBot + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
           {yMin}
         </text>
         <line x1={plotLeft} y1={yTop} x2={plotRight} y2={yTop} stroke="rgba(117,173,234,0.16)" strokeWidth={1} />
-        <text x={plotLeft - 6} y={yTop + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+        <text x={plotLeft - 5} y={yTop + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
           {yMax}
         </text>
 
         {/* Reference lines at 45 dB and 60 dB */}
         <line x1={plotLeft} y1={y45} x2={plotRight} y2={y45} stroke={GREEN} strokeOpacity={0.8} strokeDasharray="5 4" strokeWidth={1.3} />
-        <text x={plotLeft - 6} y={y45 + 4} fontFamily={MONO} fontSize={fontSize} fontWeight={700} fill={GREEN} textAnchor="end">
+        <text x={plotLeft - 5} y={y45 + 4} fontFamily={MONO} fontSize={fontSize} fontWeight={700} fill={GREEN} textAnchor="end">
           45
         </text>
 
         <line x1={plotLeft} y1={y60} x2={plotRight} y2={y60} stroke={RED_TEXT} strokeOpacity={0.85} strokeDasharray="5 4" strokeWidth={1.3} />
-        <text x={plotLeft - 6} y={y60 + 4} fontFamily={MONO} fontSize={fontSize} fontWeight={700} fill={RED_TEXT} textAnchor="end">
+        <text x={plotLeft - 5} y={y60 + 4} fontFamily={MONO} fontSize={fontSize} fontWeight={700} fill={RED_TEXT} textAnchor="end">
           60
         </text>
 
-        {/* Band labels placed inside clear corners of each band */}
+        {/* Band labels placed inside clear zones of each band */}
         <g>
-          <rect x={plotLeft + 4} y={y60 - 20} width={44} height={16} rx={3} fill="#132952" fillOpacity={0.9} />
-          <text x={plotLeft + 8} y={y60 - 8} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={RED_TEXT} textAnchor="start">
+          <rect x={plotLeft + 4} y={y60 - 17} width={44} height={14} rx={3} fill="#132952" fillOpacity={0.9} />
+          <text x={plotLeft + 8} y={y60 - 6} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={RED_TEXT} textAnchor="start">
             Social
           </text>
         </g>
         <g>
-          <rect x={plotRight - 76} y={y60 + 2} width={72} height={16} rx={3} fill="#132952" fillOpacity={0.9} />
+          <rect x={plotRight - 76} y={y60 + 3} width={72} height={15} rx={3} fill="#132952" fillOpacity={0.9} />
           <text x={plotRight - 8} y={y60 + 14} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={GOLD} textAnchor="end">
             Low chatter
           </text>
         </g>
         <g>
-          <rect x={plotLeft + plotW / 2 - 22} y={yBot - 20} width={44} height={16} rx={3} fill="#132952" fillOpacity={0.9} />
-          <text x={plotLeft + plotW / 2} y={yBot - 8} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={GREEN} textAnchor="middle">
+          <rect x={plotLeft + plotW / 2 - 22} y={yBot - 17} width={44} height={14} rx={3} fill="#132952" fillOpacity={0.9} />
+          <text x={plotLeft + plotW / 2} y={yBot - 6} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={GREEN} textAnchor="middle">
             Quiet
           </text>
         </g>
@@ -389,7 +397,7 @@ function NoiseChart({
               key={p.h}
               cx={p.x}
               cy={p.y}
-              r={isQuiet ? (compact ? 5.5 : 6) : compact ? 3.1 : 3.6}
+              r={isQuiet ? (compact ? 5.2 : 5.8) : compact ? 3 : 3.5}
               fill={color}
               stroke={isQuiet ? '#FFFFFF' : '#132952'}
               strokeWidth={isQuiet ? 2 : 1.2}
@@ -422,7 +430,7 @@ function NoiseChart({
             <text
               key={h}
               x={tx}
-              y={H - 8}
+              y={H - 5}
               fontFamily={LATO}
               fontSize={fontSize}
               fontWeight={i === quietIdx ? 700 : 400}
@@ -435,10 +443,10 @@ function NoiseChart({
         })}
       </svg>
 
-      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', fontSize: 12, color: MUTED }}>
-        <span style={{ color: GREEN }}>Below 45 dB: Quiet</span>
-        <span style={{ color: GOLD }}>45–60 dB: Low chatter</span>
-        <span style={{ color: RED_TEXT }}>Above 60 dB: Social</span>
+      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', fontSize: 12, color: MUTED }}>
+        <span style={{ color: GREEN }}>&lt;45 dB Quiet</span>
+        <span style={{ color: GOLD }}>45–60 Low chatter</span>
+        <span style={{ color: RED_TEXT }}>&gt;60 dB Social</span>
       </div>
 
       <div className="sr-only" style={{ left: 0 }}>
@@ -485,9 +493,9 @@ export function PeakHoursCharts({
   const data = peakFor(floor);
   if (!data) {
     return (
-      <section aria-label={`Floor ${floor} typical weekday charts`} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <section aria-label={`Floor ${floor} typical weekday charts`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <span style={monoLabel(12)}>TYPICAL WEEKDAY · SAMPLE DATA</span>
-        <p style={{ margin: 0, padding: '14px 16px', borderRadius: 12, background: '#132952', border: '1px solid rgba(117,173,234,0.24)', fontSize: 15, color: MUTED }}>
+        <p style={{ margin: 0, padding: '12px 14px', borderRadius: 12, background: '#132952', border: '1px solid rgba(117,173,234,0.24)', fontSize: 15, color: MUTED }}>
           No typical-day data for this floor yet.
         </p>
       </section>
@@ -497,8 +505,8 @@ export function PeakHoursCharts({
   const cap = seats ?? DEFAULT_SEATS[floor] ?? Math.max(...data.people);
 
   return (
-    <section aria-label={`Floor ${floor} typical weekday charts`} data-testid="peak-hours-charts" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))', gap: 16 }}>
+    <section aria-label={`Floor ${floor} typical weekday charts`} data-testid="peak-hours-charts">
+      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
         <FootTrafficChart floor={floor} seats={cap} data={data} compact={compact} />
         <NoiseChart floor={floor} data={data} compact={compact} />
       </div>

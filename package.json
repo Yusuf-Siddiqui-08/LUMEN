@@ -15,7 +15,8 @@
     "build": "npm run build -w web && npm run build -w server",
     "test": "npm run test -w server && npm run test -w web",
     "start": "npm run start -w server",
-    "start:sim": "npm run start:sim -w server"
+    "start:sim": "npm run start:sim -w server",
+    "export:snapshots": "node server/scripts/export-snapshots.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

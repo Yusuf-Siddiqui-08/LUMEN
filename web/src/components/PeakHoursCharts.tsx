@@ -7,10 +7,13 @@ import {
   type FloorPeakData,
   formatHour,
   PEAK_HOURS,
+  PEAK_HOURS_DATA,
   peakFor,
   quietestHour,
   quietestIndex,
   shortHour,
+  trendNoiseFor,
+  trendPeopleFor,
 } from '../lib/peakHours';
 
 /** Fallback capacities matching server/config/floors.json if a caller omits seats. */
@@ -76,6 +79,8 @@ function ChartHeader({
   sentence: string;
   theme?: FloorTheme;
 }) {
+  const badgeText =
+    PEAK_HOURS_DATA.source === 'measured' ? 'Typical weekday · MATLAB measured' : 'Typical weekday · sample (MATLAB)';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2px 8px' }}>
@@ -90,7 +95,7 @@ function ChartHeader({
             background: theme ? theme.badgeBg : 'rgba(244,182,1,0.08)',
           }}
         >
-          Typical weekday · sample data
+          {badgeText}
         </span>
       </div>
       <p style={{ margin: 0, fontSize: 15.5, fontWeight: 700, lineHeight: 1.3, color: '#FFFFFF' }}>{sentence}</p>
@@ -139,6 +144,12 @@ function FootTrafficChart({
   const peakCenter = plotLeft + (peakIdx + 0.5) * slotW;
   const peakPos = clampAnchor(peakIdx, hours.length, peakCenter, plotLeft, plotRight);
   const peakY = yOf(peakPeople);
+
+  const trend = trendPeopleFor(data);
+  const trendPolyline = trend
+    .map((val, i) => `${(plotLeft + (i + 0.5) * slotW).toFixed(1)},${yOf(val).toFixed(1)}`)
+    .join(' ');
+  const haloColor = theme ? theme.chartBadgeBg : '#132952';
 
   const fontSize = 11.5;
   const unitOnRight = peakIdx <= 2;
@@ -206,10 +217,31 @@ function FootTrafficChart({
               stroke={isPeak ? '#FFFFFF' : undefined}
               strokeWidth={isPeak ? 1.8 : 0}
             >
-              <title>{`${formatHour(hours[i])}: ${count} of ${seats} seats taken`}</title>
+              <title>{`${formatHour(hours[i])}: ${count} of ${seats} seats taken (3-hr trend ${trend[i].toFixed(1)})`}</title>
             </rect>
           );
         })}
+
+        {/* 3-hour centered moving average computed in MATLAB (movmean) */}
+        <polyline
+          points={trendPolyline}
+          fill="none"
+          stroke={haloColor}
+          strokeOpacity={0.78}
+          strokeWidth={3.2}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <polyline
+          points={trendPolyline}
+          fill="none"
+          stroke="#FFFFFF"
+          strokeOpacity={0.9}
+          strokeWidth={1.7}
+          strokeDasharray="4 3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
 
         <text
           x={peakPos.x}
@@ -260,15 +292,22 @@ function FootTrafficChart({
           <span style={{ width: 9, height: 9, borderRadius: 2, background: RED }} />
           Full ({seats})
         </span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <svg width="15" height="8" viewBox="0 0 15 8">
+            <line x1="0" y1="4" x2="15" y2="4" stroke="#FFFFFF" strokeOpacity={0.9} strokeWidth="1.7" strokeDasharray="4 2.5" />
+          </svg>
+          3-hr trend
+        </span>
       </div>
 
       <div className="sr-only" style={{ left: 0 }}>
         <table>
-          <caption>{`Typical weekday foot traffic by hour on Floor ${floor} (sample data)`}</caption>
+          <caption>{`Typical weekday foot traffic by hour on Floor ${floor} (MATLAB ${PEAK_HOURS_DATA.source} averages)`}</caption>
           <thead>
             <tr>
               <th scope="col">Hour</th>
               <th scope="col">People on floor</th>
+              <th scope="col">3-hr trend</th>
               <th scope="col">Seats capacity</th>
             </tr>
           </thead>
@@ -277,6 +316,7 @@ function FootTrafficChart({
               <tr key={h}>
                 <td>{formatHour(h)}</td>
                 <td>{data.people[i]}</td>
+                <td>{trend[i].toFixed(1)}</td>
                 <td>{seats}</td>
               </tr>
             ))}
@@ -336,6 +376,11 @@ function NoiseChart({
     y: yOf(db),
   }));
   const polyline = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const trend = trendNoiseFor(data);
+  const trendPolyline = trend
+    .map((db, i) => `${points[i].x.toFixed(1)},${yOf(db).toFixed(1)}`)
+    .join(' ');
+  const r2 = data.matlab?.traffic_noise_r2;
 
   const quietPt = points[quietIdx];
   const quietPos = clampAnchor(quietIdx, hours.length, quietPt.x, plotLeft, plotRight);
@@ -403,7 +448,17 @@ function NoiseChart({
           </text>
         </g>
 
-        {/* Noise curve */}
+        {/* 3-hour centered moving average (MATLAB movmean) + hourly Leq curve */}
+        <polyline
+          points={trendPolyline}
+          fill="none"
+          stroke="#FFFFFF"
+          strokeOpacity={0.78}
+          strokeWidth={1.6}
+          strokeDasharray="4 3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
         <polyline points={polyline} fill="none" stroke={lineColor} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
 
         {points.map((p, i) => {
@@ -419,7 +474,7 @@ function NoiseChart({
               stroke={isQuiet ? '#FFFFFF' : badgeBg}
               strokeWidth={isQuiet ? 2 : 1.2}
             >
-              <title>{`${formatHour(p.h)}: ${p.db.toFixed(1)} dB (${bandName(p.db)})`}</title>
+              <title>{`${formatHour(p.h)}: ${p.db.toFixed(1)} dB (${bandName(p.db)}, 3-hr trend ${trend[i].toFixed(1)} dB)`}</title>
             </circle>
           );
         })}
@@ -460,19 +515,31 @@ function NoiseChart({
         })}
       </svg>
 
-      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', fontSize: 12, color: muted }}>
+      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', fontSize: 12, color: muted }}>
         <span style={{ color: GREEN }}>&lt;45 dB Quiet</span>
         <span style={{ color: GOLD }}>45–60 Low chatter</span>
         <span style={{ color: RED_TEXT }}>&gt;60 dB Social</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <svg width="15" height="8" viewBox="0 0 15 8">
+            <line x1="0" y1="4" x2="15" y2="4" stroke="#FFFFFF" strokeOpacity={0.82} strokeWidth="1.6" strokeDasharray="4 2.5" />
+          </svg>
+          3-hr trend
+        </span>
+        {r2 !== undefined && (
+          <span style={{ ...monoLabel(11, muted), letterSpacing: '0.02em' }}>
+            {`R² ${r2.toFixed(2)}`}
+          </span>
+        )}
       </div>
 
       <div className="sr-only" style={{ left: 0 }}>
         <table>
-          <caption>{`Typical weekday noise level by hour on Floor ${floor} (sample data)`}</caption>
+          <caption>{`Typical weekday noise level by hour on Floor ${floor} (MATLAB ${PEAK_HOURS_DATA.source} Leq averages)`}</caption>
           <thead>
             <tr>
               <th scope="col">Hour</th>
               <th scope="col">Noise level (dB)</th>
+              <th scope="col">3-hr trend (dB)</th>
               <th scope="col">Band</th>
             </tr>
           </thead>
@@ -483,6 +550,7 @@ function NoiseChart({
                 <tr key={h}>
                   <td>{formatHour(h)}</td>
                   <td>{`${db.toFixed(1)} dB`}</td>
+                  <td>{`${trend[i].toFixed(1)} dB`}</td>
                   <td>{bandName(db)}</td>
                 </tr>
               );
@@ -496,7 +564,8 @@ function NoiseChart({
 
 /**
  * Typical-weekday hourly foot traffic and noise charts for the selected floor.
- * Uses sample data from web/src/data/peakHours.json (never live sensor data).
+ * Uses MATLAB-computed typical-weekday data and 3-hour moving averages from
+ * web/src/data/peakHours.json (never live sensor data).
  */
 export function PeakHoursCharts({
   floor,

@@ -1,10 +1,12 @@
 import { type CSSProperties, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FloorBackdrop } from '../components/FloorBackdrop';
 import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { Wordmark } from '../components/Logo';
 import { PeakHoursCharts } from '../components/PeakHoursCharts';
 import { useFloors } from '../lib/floors';
+import { themeForFloor } from '../lib/floorThemes';
 import { useDocumentTitle, useMediaQuery, useNow } from '../lib/hooks';
 import {
   bestZoneIndex,
@@ -86,6 +88,8 @@ export default function Home() {
   const staleFloors = floors.filter((f) => f.stale);
   const totalFree = fresh.reduce((s, f) => s + f.free, 0);
   const selected = floors.find((f) => f.n === sel) ?? floors[1] ?? floors[0] ?? null;
+  const activeFloor = selected?.n ?? sel;
+  const theme = themeForFloor(activeFloor);
   const rec = recommend(need, floors);
   const showList = !isPhone || !phoneDetail;
   const showDetail = !isPhone || phoneDetail;
@@ -339,11 +343,60 @@ export default function Home() {
                 />
               )}
             </div>
-
-            {showDetail && selected && <PeakHoursCharts floor={selected.n} seats={selected.cap} compact={isPhone} />}
-
-            {showDetail && selected && <FloorPlan floor={selected.n} compact={isPhone} />}
           </section>
+
+          {showDetail && selected && (
+            <section
+              id="floor-theme-panel"
+              className="floors-section floor-theme-section"
+              data-floor={selected.n}
+              data-floor-theme={theme.nickname}
+              aria-label={`Floor ${selected.n}, ${theme.nickname} peak hours and floor plan`}
+              style={{
+                position: 'relative',
+                overflow: 'hidden',
+                marginTop: 16,
+                background: theme.sectionBg,
+                border: `1px solid ${theme.sectionBorder}`,
+                boxShadow: theme.sectionShadow,
+                borderRadius: 22,
+                padding: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                transition: 'border-color 0.45s ease, box-shadow 0.45s ease',
+              }}
+            >
+              <FloorBackdrop activeFloor={activeFloor} />
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', gap: '6px 16px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '8px 12px' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, textShadow: theme.textShadow }}>
+                      Floor {selected.n} · {theme.nickname}
+                    </h2>
+                    <span
+                      style={{
+                        ...label(11.5, { color: theme.badgeText, fontWeight: 700, letterSpacing: '0.06em' }),
+                        padding: '3px 10px',
+                        borderRadius: 999,
+                        border: `1px solid ${theme.badgeBorder}`,
+                        background: theme.badgeBg,
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                      }}
+                    >
+                      SLC LEVEL {selected.n}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 14, color: theme.muted, textShadow: theme.textShadow }}>{theme.tagline}</span>
+                </div>
+
+                <PeakHoursCharts floor={selected.n} seats={selected.cap} compact={isPhone} theme={theme} />
+
+                <FloorPlan floor={selected.n} compact={isPhone} theme={theme} />
+              </div>
+            </section>
+          )}
 
           <section style={{ padding: '72px 0 24px', display: 'flex', flexDirection: 'column', gap: 28 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: '46rem' }}>

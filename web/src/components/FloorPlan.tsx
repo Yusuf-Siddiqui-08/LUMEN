@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { type Area, type AreaKind, areaBox, type Box, bounds, type FloorPlan as Plan, planFor, wrapLabel } from '../lib/floorPlans';
+import type { FloorTheme } from '../lib/floorThemes';
 import { BLUE, GOLD, INK, MONO } from '../lib/logic';
 
 const FLOOR_BG = '#0E2250';
@@ -16,6 +17,12 @@ const KIND: Record<AreaKind, KindStyle> = {
   room: { fill: '#2E4F8F', opacity: 1, name: 'Rooms, labs and offices' },
   service: { fill: '#3A4F78', opacity: 1, name: 'Washrooms and storage' },
 };
+
+function kindStyle(kind: AreaKind, theme?: FloorTheme): KindStyle {
+  const base = KIND[kind];
+  if (!theme) return base;
+  return { ...theme.plan.kinds[kind], name: base.name };
+}
 
 /** Text that fits inside a box: shrink until it fits, or leave it off (it is still in the screen-reader list). */
 function FitLabel({ text, box }: { text: string; box: Box }) {
@@ -40,8 +47,8 @@ function FitLabel({ text, box }: { text: string; box: Box }) {
   return null;
 }
 
-function AreaShape({ a }: { a: Area }) {
-  const k = KIND[a.kind];
+function AreaShape({ a, theme }: { a: Area; theme?: FloorTheme }) {
+  const k = kindStyle(a.kind, theme);
   const common = {
     fill: k.fill,
     fillOpacity: k.opacity,
@@ -62,10 +69,16 @@ function AreaShape({ a }: { a: Area }) {
   );
 }
 
-function PlanSvg({ plan }: { plan: Plan }) {
+function PlanSvg({ plan, theme }: { plan: Plan; theme?: FloorTheme }) {
   const b = bounds(plan.plate);
   const pad = 10;
   const titleId = `plan-title-${plan.floor}`;
+  const plateBg = theme ? theme.plan.plateBg : FLOOR_BG;
+  const plateStroke = theme ? theme.plan.plateStroke : BLUE;
+  const elevBg = theme ? theme.plan.elevatorBg : ELEVATOR;
+  const elevStroke = theme ? theme.plan.elevatorStroke : BLUE;
+  const stairsBg = theme ? theme.plan.stairsBg : GOLD;
+  const stairsText = theme ? theme.plan.stairsText : INK;
   return (
     <svg
       role="img"
@@ -74,9 +87,9 @@ function PlanSvg({ plan }: { plan: Plan }) {
       style={{ display: 'block', width: '100%', height: 'auto' }}
     >
       <title id={titleId}>{`${plan.title} floor plan of the Student Learning Centre`}</title>
-      <polygon points={plan.plate.map((p) => p.join(',')).join(' ')} fill={FLOOR_BG} stroke={BLUE} strokeWidth={2.5} strokeLinejoin="round" />
+      <polygon points={plan.plate.map((p) => p.join(',')).join(' ')} fill={plateBg} stroke={plateStroke} strokeWidth={2.5} strokeLinejoin="round" />
       {plan.areas.map((a, i) => (
-        <AreaShape key={i} a={a} />
+        <AreaShape key={i} a={a} theme={theme} />
       ))}
       {plan.elevators.map((e, i) => {
         const gap = 4;
@@ -85,7 +98,7 @@ function PlanSvg({ plan }: { plan: Plan }) {
         const dh = e.doors > 1 ? 13 : e.h - 8;
         return (
           <g key={`e${i}`}>
-            <rect x={e.x} y={e.y} width={e.w} height={e.h} rx={3} fill={ELEVATOR} stroke={BLUE} strokeWidth={1.2} />
+            <rect x={e.x} y={e.y} width={e.w} height={e.h} rx={3} fill={elevBg} stroke={elevStroke} strokeWidth={1.2} />
             {e.doors > 1 && (
               <text x={e.x + e.w / 2} y={e.y + 10} fontSize={8} fontWeight={700} fill="#FFFFFF" textAnchor="middle" fontFamily={MONO}>
                 ELEVATORS
@@ -109,8 +122,8 @@ function PlanSvg({ plan }: { plan: Plan }) {
       })}
       {plan.stairs.map((s, i) => (
         <g key={`s${i}`}>
-          <rect x={s.x} y={s.y} width={s.w} height={s.h} rx={3} fill={GOLD} />
-          <text x={s.x + s.w / 2} y={s.y + s.h / 2 + 3} fontSize={8} fontWeight={700} fill={INK} textAnchor="middle" fontFamily={MONO}>
+          <rect x={s.x} y={s.y} width={s.w} height={s.h} rx={3} fill={stairsBg} />
+          <text x={s.x + s.w / 2} y={s.y + s.h / 2 + 3} fontSize={8} fontWeight={700} fill={stairsText} textAnchor="middle" fontFamily={MONO}>
             STAIRS
           </text>
         </g>
@@ -127,8 +140,11 @@ const mono = (size: number, color = '#C9D6EE'): CSSProperties => ({
   color,
 });
 
-function Legend({ plan }: { plan: Plan }) {
+function Legend({ plan, theme }: { plan: Plan; theme?: FloorTheme }) {
   const has = new Set(plan.areas.map((a) => a.kind));
+  const elevBg = theme ? theme.plan.elevatorBg : ELEVATOR;
+  const elevStroke = theme ? theme.plan.elevatorStroke : BLUE;
+  const stairsBg = theme ? theme.plan.stairsBg : GOLD;
   const icon = (children: ReactNode) => (
     <svg width={28} height={18} aria-hidden="true">
       {children}
@@ -137,14 +153,17 @@ function Legend({ plan }: { plan: Plan }) {
   const items: [ReactNode, string][] = [
     ...(Object.keys(KIND) as AreaKind[])
       .filter((k) => has.has(k))
-      .map((k): [ReactNode, string] => [
-        icon(
-          <rect x={1} y={1} width={26} height={16} rx={3} fill={KIND[k].fill} fillOpacity={KIND[k].opacity} stroke={KIND[k].stroke} strokeDasharray={KIND[k].dash} />,
-        ),
-        KIND[k].name,
-      ]),
-    [icon(<rect x={1} y={1} width={26} height={16} rx={3} fill={GOLD} />), 'Stairs'],
-    [icon(<rect x={1} y={1} width={26} height={16} rx={3} fill={ELEVATOR} stroke={BLUE} />), 'Elevators'],
+      .map((k): [ReactNode, string] => {
+        const ks = kindStyle(k, theme);
+        return [
+          icon(
+            <rect x={1} y={1} width={26} height={16} rx={3} fill={ks.fill} fillOpacity={ks.opacity} stroke={ks.stroke} strokeDasharray={ks.dash} />,
+          ),
+          ks.name,
+        ];
+      }),
+    [icon(<rect x={1} y={1} width={26} height={16} rx={3} fill={stairsBg} />), 'Stairs'],
+    [icon(<rect x={1} y={1} width={26} height={16} rx={3} fill={elevBg} stroke={elevStroke} />), 'Elevators'],
   ];
   return (
     <ul aria-label="Map legend" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexWrap: 'wrap', gap: '8px 18px' }}>
@@ -162,32 +181,77 @@ function Legend({ plan }: { plan: Plan }) {
  * The SLC floor plan for one floor, with a legend and what is on the floor.
  * Floors without a plan get a short note instead, so the panel never just disappears.
  */
-export function FloorPlan({ floor, compact = false }: { floor: number; compact?: boolean }) {
+export function FloorPlan({ floor, compact = false, theme }: { floor: number; compact?: boolean; theme?: FloorTheme }) {
   const plan = planFor(floor);
   const wrap: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
+  const muted = theme ? theme.muted : '#C9D6EE';
+  const muted2 = theme ? theme.muted2 : '#9FB3DA';
   if (!plan) {
     return (
       <section aria-label={`Floor ${floor} plan`} style={wrap}>
-        <span style={mono(12)}>FLOOR PLAN</span>
-        <p style={{ margin: 0, padding: '14px 16px', borderRadius: 12, background: '#19356B', fontSize: 15, color: '#C9D6EE' }}>
+        <span
+          style={{
+            ...mono(12, muted),
+            ...(theme
+              ? {
+                  alignSelf: 'flex-start',
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  background: theme.headerBackingBg,
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }
+              : {}),
+          }}
+        >
+          FLOOR PLAN
+        </span>
+        <p
+          style={{
+            margin: 0,
+            padding: '14px 16px',
+            borderRadius: 12,
+            background: theme ? theme.cardBg : '#19356B',
+            border: theme ? `1px solid ${theme.cardBorder}` : undefined,
+            backdropFilter: theme ? 'blur(12px)' : undefined,
+            WebkitBackdropFilter: theme ? 'blur(12px)' : undefined,
+            fontSize: 15,
+            color: muted,
+            transition: theme ? 'background-color 0.45s ease, border-color 0.45s ease' : undefined,
+          }}
+        >
           There is no floor plan for floor {floor} yet. Plans cover levels 3 to 8.
         </p>
       </section>
     );
   }
   const labelled = plan.areas.filter((a) => a.label);
+  const sideStyle: CSSProperties = theme
+    ? {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14,
+        background: theme.cardBg,
+        border: `1px solid ${theme.cardBorder}`,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: 14,
+        padding: 16,
+        transition: 'background-color 0.45s ease, border-color 0.45s ease',
+      }
+    : { display: 'flex', flexDirection: 'column', gap: 14 };
   const side = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Legend plan={plan} />
+    <div style={sideStyle}>
+      <Legend plan={plan} theme={theme} />
       <div>
-        <span style={mono(12)}>ON THIS FLOOR</span>
-        <ul style={{ margin: '8px 0 0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 15, color: '#DDE6F7' }}>
+        <span style={mono(12, muted)}>ON THIS FLOOR</span>
+        <ul style={{ margin: '8px 0 0', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 15, color: theme ? '#FFFFFF' : '#DDE6F7' }}>
           {plan.facts.map((f) => (
             <li key={f}>{f}</li>
           ))}
         </ul>
       </div>
-      <span style={{ fontSize: 12, color: '#9FB3DA' }}>
+      <span style={{ fontSize: 12, color: muted2 }}>
         Traced from the SLC architectural plans and the SLC floor map. Room shapes and positions are approximate.
       </span>
     </div>
@@ -195,27 +259,62 @@ export function FloorPlan({ floor, compact = false }: { floor: number; compact?:
   return (
     <section aria-label={`${plan.title} plan`} style={wrap} data-testid="floor-plan">
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px 14px' }}>
-        <span style={mono(12)}>FLOOR PLAN · SLC {plan.title.toUpperCase()}</span>
+        <span
+          style={{
+            ...mono(12, muted),
+            ...(theme
+              ? {
+                  padding: '4px 10px',
+                  borderRadius: 8,
+                  background: theme.headerBackingBg,
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                }
+              : {}),
+          }}
+        >
+          FLOOR PLAN · SLC {plan.title.toUpperCase()}
+        </span>
         {plan.schematic && (
-          <span style={{ ...mono(11, GOLD), padding: '3px 10px', borderRadius: 999, border: `1px solid ${GOLD}` }}>
+          <span
+            style={{
+              ...mono(11, theme ? theme.badgeText : GOLD),
+              padding: '3px 10px',
+              borderRadius: 999,
+              border: `1px solid ${theme ? theme.badgeBorder : GOLD}`,
+              background: theme ? theme.badgeBg : undefined,
+              backdropFilter: theme ? 'blur(8px)' : undefined,
+            }}
+          >
             APPROXIMATE LAYOUT
           </span>
         )}
       </div>
       {plan.schematic && (
-        <p style={{ margin: 0, fontSize: 13, color: '#C9D6EE' }}>
+        <p style={{ margin: 0, fontSize: 13, color: muted, textShadow: theme ? theme.textShadow : undefined }}>
           There is no architectural drawing for this level, so the spaces from the SLC floor map are placed around the shared core.
         </p>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' :'minmax(0, 520px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 520px) minmax(0, 1fr)', gap: 20, alignItems: 'start' }}>
         <div>
-          <div style={{ overflowX: 'auto', borderRadius: 14, background: '#19356B', padding: 12 }}>
+          <div
+            style={{
+              overflowX: 'auto',
+              borderRadius: 14,
+              background: theme ? theme.plan.containerBg : '#19356B',
+              border: theme ? `1px solid ${theme.cardBorder}` : undefined,
+              backdropFilter: theme ? 'blur(12px)' : undefined,
+              WebkitBackdropFilter: theme ? 'blur(12px)' : undefined,
+              padding: 12,
+              transition: theme ? 'background-color 0.45s ease, border-color 0.45s ease' : undefined,
+            }}
+          >
             <div style={{ minWidth: compact ? 480 : 0 }}>
-              <PlanSvg plan={plan} />
+              <PlanSvg plan={plan} theme={theme} />
             </div>
           </div>
           {compact && (
-            <span aria-hidden="true" style={{ display: 'block', marginTop: 8, fontSize: 13, color: '#9FB3DA' }}>
+            <span aria-hidden="true" style={{ display: 'block', marginTop: 8, fontSize: 13, color: muted2, textShadow: theme ? theme.textShadow : undefined }}>
               Scroll sideways to see the whole floor →
             </span>
           )}

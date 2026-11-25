@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import type { FloorTheme } from '../lib/floorThemes';
 import { BLUE, GOLD, GREEN, MONO, MUTED, MUTED_2, RED, RED_TEXT, seatColor } from '../lib/logic';
 import {
   busiestHour,
@@ -25,9 +26,11 @@ const DEFAULT_SEATS: Record<number, number> = {
 
 const LATO = "Lato, 'Helvetica Neue', Arial, sans-serif";
 
-const cardStyle = (compact: boolean): CSSProperties => ({
-  background: '#132952',
-  border: '1px solid rgba(117,173,234,0.24)',
+const cardStyle = (compact: boolean, theme?: FloorTheme): CSSProperties => ({
+  background: theme ? theme.cardBg : '#132952',
+  border: `1px solid ${theme ? theme.cardBorder : 'rgba(117,173,234,0.24)'}`,
+  backdropFilter: theme ? 'blur(12px)' : undefined,
+  WebkitBackdropFilter: theme ? 'blur(12px)' : undefined,
   borderRadius: 14,
   padding: compact ? '12px 12px 10px' : '14px 16px 12px',
   display: 'flex',
@@ -35,6 +38,7 @@ const cardStyle = (compact: boolean): CSSProperties => ({
   gap: 6,
   minWidth: 0,
   boxSizing: 'border-box',
+  transition: theme ? 'background-color 0.45s ease, border-color 0.45s ease' : undefined,
 });
 
 const monoLabel = (size = 12, color = MUTED): CSSProperties => ({
@@ -66,22 +70,24 @@ function clampAnchor(index: number, count: number, x: number, plotLeft: number, 
 function ChartHeader({
   kicker,
   sentence,
+  theme,
 }: {
   kicker: string;
   sentence: string;
+  theme?: FloorTheme;
 }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2px 8px' }}>
-        <span style={monoLabel(11.5, MUTED_2)}>{kicker}</span>
+        <span style={monoLabel(11.5, theme ? theme.muted2 : MUTED_2)}>{kicker}</span>
         <span
           style={{
-            ...monoLabel(11, GOLD),
+            ...monoLabel(11, theme ? theme.badgeText : GOLD),
             letterSpacing: '0.03em',
             padding: '1px 7px',
             borderRadius: 999,
-            border: '1px solid rgba(244,182,1,0.45)',
-            background: 'rgba(244,182,1,0.08)',
+            border: `1px solid ${theme ? theme.badgeBorder : 'rgba(244,182,1,0.45)'}`,
+            background: theme ? theme.badgeBg : 'rgba(244,182,1,0.08)',
           }}
         >
           Typical weekday · sample data
@@ -97,12 +103,17 @@ function FootTrafficChart({
   seats,
   data,
   compact,
+  theme,
 }: {
   floor: number;
   seats: number;
   data: FloorPeakData;
   compact: boolean;
+  theme?: FloorTheme;
 }) {
+  const muted = theme ? theme.muted : MUTED;
+  const gridColor = theme ? theme.chartGrid : 'rgba(117,173,234,0.18)';
+  const gridCapColor = theme ? theme.chartGridCap : 'rgba(117,173,234,0.4)';
   const hours = PEAK_HOURS;
   const peakIdx = busiestIndex(data);
   const peakH = busiestHour(data, hours);
@@ -133,8 +144,8 @@ function FootTrafficChart({
   const unitOnRight = peakIdx <= 2;
 
   return (
-    <article style={cardStyle(compact)}>
-      <ChartHeader kicker="FOOT TRAFFIC BY HOUR" sentence={sentence} />
+    <article style={cardStyle(compact, theme)}>
+      <ChartHeader kicker="FOOT TRAFFIC BY HOUR" sentence={sentence} theme={theme} />
       <svg
         role="img"
         aria-label={sentence}
@@ -147,7 +158,7 @@ function FootTrafficChart({
           y={13}
           fontFamily={MONO}
           fontSize={fontSize}
-          fill={MUTED}
+          fill={muted}
           textAnchor={unitOnRight ? 'end' : 'start'}
         >
           people
@@ -163,11 +174,11 @@ function FootTrafficChart({
                 y1={y}
                 x2={plotRight}
                 y2={y}
-                stroke={isCap ? 'rgba(117,173,234,0.4)' : 'rgba(117,173,234,0.18)'}
+                stroke={isCap ? gridCapColor : gridColor}
                 strokeDasharray={isCap ? '4 4' : undefined}
                 strokeWidth={1}
               />
-              <text x={plotLeft - 5} y={y + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+              <text x={plotLeft - 5} y={y + 4} fontFamily={MONO} fontSize={fontSize} fill={muted} textAnchor="end">
                 {tick}
               </text>
             </g>
@@ -227,7 +238,7 @@ function FootTrafficChart({
               fontFamily={LATO}
               fontSize={fontSize}
               fontWeight={i === peakIdx ? 700 : 400}
-              fill={i === peakIdx ? '#FFFFFF' : MUTED}
+              fill={i === peakIdx ? '#FFFFFF' : muted}
               textAnchor={anchor}
             >
               {shortHour(h)}
@@ -236,7 +247,7 @@ function FootTrafficChart({
         })}
       </svg>
 
-      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: MUTED }}>
+      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: 12, color: muted }}>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
           <span style={{ width: 9, height: 9, borderRadius: 2, background: GREEN }} />
           10+ free
@@ -280,11 +291,17 @@ function NoiseChart({
   floor,
   data,
   compact,
+  theme,
 }: {
   floor: number;
   data: FloorPeakData;
   compact: boolean;
+  theme?: FloorTheme;
 }) {
+  const muted = theme ? theme.muted : MUTED;
+  const gridColor = theme ? theme.chartGrid : 'rgba(117,173,234,0.22)';
+  const lineColor = theme ? theme.chartLine : BLUE;
+  const badgeBg = theme ? theme.chartBadgeBg : '#132952';
   const hours = PEAK_HOURS;
   const quietIdx = quietestIndex(data);
   const quietH = quietestHour(data, hours);
@@ -327,8 +344,8 @@ function NoiseChart({
   const fontSize = 11.5;
 
   return (
-    <article style={cardStyle(compact)}>
-      <ChartHeader kicker="NOISE BY HOUR" sentence={sentence} />
+    <article style={cardStyle(compact, theme)}>
+      <ChartHeader kicker="NOISE BY HOUR" sentence={sentence} theme={theme} />
       <svg
         role="img"
         aria-label={sentence}
@@ -341,17 +358,17 @@ function NoiseChart({
         <rect x={plotLeft} y={y60} width={plotW} height={y45 - y60} fill={GOLD} fillOpacity={0.07} />
         <rect x={plotLeft} y={y45} width={plotW} height={yBot - y45} fill={GREEN} fillOpacity={0.08} />
 
-        <text x={plotLeft} y={13} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="start">
+        <text x={plotLeft} y={13} fontFamily={MONO} fontSize={fontSize} fill={muted} textAnchor="start">
           dB
         </text>
 
         {/* Bottom and top bounds */}
-        <line x1={plotLeft} y1={yBot} x2={plotRight} y2={yBot} stroke="rgba(117,173,234,0.22)" strokeWidth={1} />
-        <text x={plotLeft - 5} y={yBot + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+        <line x1={plotLeft} y1={yBot} x2={plotRight} y2={yBot} stroke={gridColor} strokeWidth={1} />
+        <text x={plotLeft - 5} y={yBot + 4} fontFamily={MONO} fontSize={fontSize} fill={muted} textAnchor="end">
           {yMin}
         </text>
-        <line x1={plotLeft} y1={yTop} x2={plotRight} y2={yTop} stroke="rgba(117,173,234,0.16)" strokeWidth={1} />
-        <text x={plotLeft - 5} y={yTop + 4} fontFamily={MONO} fontSize={fontSize} fill={MUTED} textAnchor="end">
+        <line x1={plotLeft} y1={yTop} x2={plotRight} y2={yTop} stroke={gridColor} strokeOpacity={0.75} strokeWidth={1} />
+        <text x={plotLeft - 5} y={yTop + 4} fontFamily={MONO} fontSize={fontSize} fill={muted} textAnchor="end">
           {yMax}
         </text>
 
@@ -368,26 +385,26 @@ function NoiseChart({
 
         {/* Band labels placed inside clear zones of each band */}
         <g>
-          <rect x={plotLeft + 4} y={y60 - 17} width={44} height={14} rx={3} fill="#132952" fillOpacity={0.9} />
+          <rect x={plotLeft + 4} y={y60 - 17} width={44} height={14} rx={3} fill={badgeBg} fillOpacity={0.92} />
           <text x={plotLeft + 8} y={y60 - 6} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={RED_TEXT} textAnchor="start">
             Social
           </text>
         </g>
         <g>
-          <rect x={plotRight - 76} y={y60 + 3} width={72} height={15} rx={3} fill="#132952" fillOpacity={0.9} />
+          <rect x={plotRight - 76} y={y60 + 3} width={72} height={15} rx={3} fill={badgeBg} fillOpacity={0.92} />
           <text x={plotRight - 8} y={y60 + 14} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={GOLD} textAnchor="end">
             Low chatter
           </text>
         </g>
         <g>
-          <rect x={plotLeft + plotW / 2 - 22} y={yBot - 17} width={44} height={14} rx={3} fill="#132952" fillOpacity={0.9} />
+          <rect x={plotLeft + plotW / 2 - 22} y={yBot - 17} width={44} height={14} rx={3} fill={badgeBg} fillOpacity={0.92} />
           <text x={plotLeft + plotW / 2} y={yBot - 6} fontFamily={LATO} fontSize={fontSize} fontWeight={700} fill={GREEN} textAnchor="middle">
             Quiet
           </text>
         </g>
 
         {/* Noise curve */}
-        <polyline points={polyline} fill="none" stroke={BLUE} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+        <polyline points={polyline} fill="none" stroke={lineColor} strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
 
         {points.map((p, i) => {
           const isQuiet = i === quietIdx;
@@ -399,7 +416,7 @@ function NoiseChart({
               cy={p.y}
               r={isQuiet ? (compact ? 5.2 : 5.8) : compact ? 3 : 3.5}
               fill={color}
-              stroke={isQuiet ? '#FFFFFF' : '#132952'}
+              stroke={isQuiet ? '#FFFFFF' : badgeBg}
               strokeWidth={isQuiet ? 2 : 1.2}
             >
               <title>{`${formatHour(p.h)}: ${p.db.toFixed(1)} dB (${bandName(p.db)})`}</title>
@@ -434,7 +451,7 @@ function NoiseChart({
               fontFamily={LATO}
               fontSize={fontSize}
               fontWeight={i === quietIdx ? 700 : 400}
-              fill={i === quietIdx ? '#FFFFFF' : MUTED}
+              fill={i === quietIdx ? '#FFFFFF' : muted}
               textAnchor={anchor}
             >
               {shortHour(h)}
@@ -443,7 +460,7 @@ function NoiseChart({
         })}
       </svg>
 
-      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', fontSize: 12, color: MUTED }}>
+      <div aria-hidden="true" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 10px', fontSize: 12, color: muted }}>
         <span style={{ color: GREEN }}>&lt;45 dB Quiet</span>
         <span style={{ color: GOLD }}>45–60 Low chatter</span>
         <span style={{ color: RED_TEXT }}>&gt;60 dB Social</span>
@@ -485,17 +502,31 @@ export function PeakHoursCharts({
   floor,
   seats,
   compact = false,
+  theme,
 }: {
   floor: number;
   seats?: number;
   compact?: boolean;
+  theme?: FloorTheme;
 }) {
   const data = peakFor(floor);
   if (!data) {
     return (
       <section aria-label={`Floor ${floor} typical weekday charts`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <span style={monoLabel(12)}>TYPICAL WEEKDAY · SAMPLE DATA</span>
-        <p style={{ margin: 0, padding: '12px 14px', borderRadius: 12, background: '#132952', border: '1px solid rgba(117,173,234,0.24)', fontSize: 15, color: MUTED }}>
+        <span style={monoLabel(12, theme ? theme.muted : MUTED)}>TYPICAL WEEKDAY · SAMPLE DATA</span>
+        <p
+          style={{
+            margin: 0,
+            padding: '12px 14px',
+            borderRadius: 12,
+            background: theme ? theme.cardBg : '#132952',
+            border: `1px solid ${theme ? theme.cardBorder : 'rgba(117,173,234,0.24)'}`,
+            backdropFilter: theme ? 'blur(12px)' : undefined,
+            WebkitBackdropFilter: theme ? 'blur(12px)' : undefined,
+            fontSize: 15,
+            color: theme ? theme.muted : MUTED,
+          }}
+        >
           No typical-day data for this floor yet.
         </p>
       </section>
@@ -507,8 +538,8 @@ export function PeakHoursCharts({
   return (
     <section aria-label={`Floor ${floor} typical weekday charts`} data-testid="peak-hours-charts">
       <div style={{ display: 'grid', gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
-        <FootTrafficChart floor={floor} seats={cap} data={data} compact={compact} />
-        <NoiseChart floor={floor} data={data} compact={compact} />
+        <FootTrafficChart floor={floor} seats={cap} data={data} compact={compact} theme={theme} />
+        <NoiseChart floor={floor} data={data} compact={compact} theme={theme} />
       </div>
     </section>
   );

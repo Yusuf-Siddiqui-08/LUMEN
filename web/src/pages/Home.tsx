@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FloorBackdrop } from '../components/FloorBackdrop';
 import { FloorPlan } from '../components/FloorPlan';
@@ -69,18 +69,17 @@ const navLink: CSSProperties = {
   textDecoration: 'none',
 };
 
+export const DEFAULT_SELECTED_FLOOR = 7;
+
 export default function Home() {
   useDocumentTitle('LUMEN · Decide before you ride');
   const live = useFloors(5000);
   const clock = useNow(1000);
   const isPhone = useMediaQuery('(max-width: 639px)');
-  const [sel, setSel] = useState(7);
+  const [sel, setSel] = useState(DEFAULT_SELECTED_FLOOR);
   const [need, setNeed] = useState<Need>('All');
-  const [phoneDetail, setPhoneDetail] = useState(false);
   const [announce, setAnnounce] = useState('');
-  const sectionRef = useRef<HTMLElement>(null);
-  const backRef = useRef<HTMLButtonElement>(null);
-  const rowRefs = useRef(new Map<number, HTMLButtonElement>());
+  const detailRef = useRef<HTMLElement>(null);
 
   const floors = live.floors;
   const elev = live.elevatorWait;
@@ -91,28 +90,15 @@ export default function Home() {
   const activeFloor = selected?.n ?? sel;
   const theme = themeForFloor(activeFloor);
   const rec = recommend(need, floors);
-  const showList = !isPhone || !phoneDetail;
-  const showDetail = !isPhone || phoneDetail;
-
-  // If the phone layout turns off (rotate, resize), go back to side-by-side.
-  useEffect(() => {
-    if (!isPhone) setPhoneDetail(false);
-  }, [isPhone]);
 
   const openFloor = (n: number) => {
     setSel(n);
     setAnnounce(`Showing floor ${n}`);
     if (isPhone) {
-      setPhoneDetail(true);
       requestAnimationFrame(() => {
-        sectionRef.current?.scrollIntoView({ block: 'start' });
-        backRef.current?.focus({ preventScroll: true });
+        detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     }
-  };
-  const closeDetail = () => {
-    setPhoneDetail(false);
-    requestAnimationFrame(() => rowRefs.current.get(sel)?.focus());
   };
   const chooseNeed = (id: Need) => {
     setNeed(id);
@@ -202,7 +188,6 @@ export default function Home() {
 
           <section
             id="floors"
-            ref={sectionRef}
             className="floors-section"
             aria-label="Live floors"
             style={{
@@ -219,8 +204,7 @@ export default function Home() {
             <div className="sr-only" aria-live="polite">
               {announce}
             </div>
-            {showList && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <h2 id="need-title" style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900 }}>
                     What do you need?
@@ -297,55 +281,38 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            )}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-              {showList && (
-                <div style={{ flex: '1 1 440px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div aria-hidden="true" style={{ display: 'flex', gap: 16, padding: '0 20px', ...label(12, { color: '#9FB3DA' }) }}>
-                    <span style={{ width: 40 }}>FLOOR</span>
-                    <span style={{ flex: 1 }}>VIBE + OCCUPANCY</span>
-                    <span>SEATS FREE</span>
-                  </div>
-                  {!live.loaded && (
-                    <p style={{ margin: 0, padding: '18px 20px', borderRadius: 12, background: '#19356B', color: '#C9D6EE' }}>
-                      {live.status === 'offline' ? 'Cannot reach the LUMEN server. Retrying…' : 'Connecting to LUMEN…'}
-                    </p>
-                  )}
-                  {floors.map((f) => (
-                    <FloorRow
-                      key={f.n}
-                      f={f}
-                      selected={!isPhone && f.n === selected?.n}
-                      need={need}
-                      isPhone={isPhone}
-                      onPick={() => openFloor(f.n)}
-                      buttonRef={(el) => {
-                        if (el) rowRefs.current.set(f.n, el);
-                        else rowRefs.current.delete(f.n);
-                      }}
-                    />
-                  ))}
-                  <span style={{ padding: '6px 4px 0', ...label(12, { letterSpacing: '0.04em', color: '#9FB3DA' }) }}>
-                    Tap a floor for details. Counts refresh every few seconds.
-                  </span>
+              <div style={{ flex: '1 1 440px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div aria-hidden="true" style={{ display: 'flex', gap: 16, padding: '0 20px', ...label(12, { color: '#9FB3DA' }) }}>
+                  <span style={{ width: 40 }}>FLOOR</span>
+                  <span style={{ flex: 1 }}>VIBE + OCCUPANCY</span>
+                  <span>SEATS FREE</span>
                 </div>
-              )}
+                {!live.loaded && (
+                  <p style={{ margin: 0, padding: '18px 20px', borderRadius: 12, background: '#19356B', color: '#C9D6EE' }}>
+                    {live.status === 'offline' ? 'Cannot reach the LUMEN server. Retrying…' : 'Connecting to LUMEN…'}
+                  </p>
+                )}
+                {floors.map((f) => (
+                  <FloorRow
+                    key={f.n}
+                    f={f}
+                    selected={f.n === selected?.n}
+                    need={need}
+                    onPick={() => openFloor(f.n)}
+                  />
+                ))}
+                <span style={{ padding: '6px 4px 0', ...label(12, { letterSpacing: '0.04em', color: '#9FB3DA' }) }}>
+                  Tap a floor for details. Counts refresh every few seconds.
+                </span>
+              </div>
 
-              {showDetail && selected && (
-                <FloorDetail
-                  f={selected}
-                  floors={floors}
-                  elev={elev}
-                  isPhone={isPhone}
-                  backRef={backRef}
-                  onBack={closeDetail}
-                />
-              )}
+              {selected && <FloorDetail f={selected} floors={floors} elev={elev} detailRef={detailRef} />}
             </div>
           </section>
 
-          {showDetail && selected && (
+          {selected && (
             <section
               id="floor-theme-panel"
               className="floors-section floor-theme-section"
@@ -507,8 +474,8 @@ export default function Home() {
               <ScreenCard to="/lobby" kicker="FLOOR 1 · BY THE ELEVATORS" title="Lobby display">
                 Every floor on one screen, with the elevator wait and a QR code.
               </ScreenCard>
-              <ScreenCard to="/mobile" kicker="ANYWHERE · SCAN ONCE" title="On your phone">
-                Pick a floor, then see seats, noise and zones before you leave class.
+              <ScreenCard to="/#floors" kicker="ANYWHERE · SCAN ONCE" title="On your phone">
+                Full live site on mobile — starts with a floor selected, live seats, noise and floor plan.
               </ScreenCard>
               <ScreenCard to="/floor/7" kicker="EVERY FLOOR" title="Floor screens">
                 Occupancy, study zones and a floor map, right where you step out.
@@ -549,16 +516,12 @@ function FloorRow({
   f,
   selected,
   need,
-  isPhone,
   onPick,
-  buttonRef,
 }: {
   f: Floor;
   selected: boolean;
   need: Need;
-  isPhone: boolean;
   onPick: () => void;
-  buttonRef: (el: HTMLButtonElement | null) => void;
 }) {
   const full = f.free === 0;
   const c = seatColor(f.free);
@@ -572,14 +535,12 @@ function FloorRow({
   const aria =
     `Floor ${f.n}, ${f.vibe}, ` +
     (full ? 'full' : seatsFreeText(f.free)) +
-    (st ? `. ${lastUpdatedText(f.ageS)}` : '') +
-    (isPhone ? '. Show details' : '');
+    (st ? `. ${lastUpdatedText(f.ageS)}` : '');
   return (
     <button
-      ref={buttonRef}
       type="button"
       className="lu-row floor-row"
-      aria-pressed={isPhone ? undefined : selected}
+      aria-pressed={selected}
       aria-label={aria}
       onClick={onPick}
       style={{
@@ -663,16 +624,12 @@ function FloorDetail({
   f,
   floors,
   elev,
-  isPhone,
-  backRef,
-  onBack,
+  detailRef,
 }: {
   f: Floor;
   floors: Floor[];
   elev: number | null;
-  isPhone: boolean;
-  backRef: React.RefObject<HTMLButtonElement | null>;
-  onBack: () => void;
+  detailRef: React.RefObject<HTMLElement | null>;
 }) {
   const full = f.free === 0;
   const st = f.stale;
@@ -690,6 +647,7 @@ function FloorDetail({
   const bestZone = bestZoneIndex(f.zones);
   return (
     <aside
+      ref={detailRef}
       aria-label={`Floor ${f.n} details`}
       className="floor-detail"
       style={{
@@ -703,30 +661,9 @@ function FloorDetail({
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
+        scrollMarginTop: 12,
       }}
     >
-      {isPhone && (
-        <button
-          ref={backRef}
-          type="button"
-          onClick={onBack}
-          style={{
-            alignSelf: 'flex-start',
-            minHeight: 44,
-            padding: '0 4px',
-            border: 'none',
-            background: 'transparent',
-            color: '#75ADEA',
-            fontFamily: MONO,
-            fontSize: 15,
-            fontWeight: 700,
-            letterSpacing: '0.04em',
-            cursor: 'pointer',
-          }}
-        >
-          ‹ ALL FLOORS
-        </button>
-      )}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <h3 className="detail-title" style={{ margin: 0, fontSize: 44, fontWeight: 900, lineHeight: 1 }}>
           Floor {f.n}

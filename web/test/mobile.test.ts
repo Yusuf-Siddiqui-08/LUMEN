@@ -4,9 +4,9 @@ import {
   detectMobileDevice,
   hasFullSiteOptOut,
   type MobileEnv,
-  rememberFullSitePreference,
   shouldRedirectToMobile,
 } from '../src/lib/mobile';
+import { DEFAULT_SELECTED_FLOOR } from '../src/pages/Home';
 
 const DESKTOP: MobileEnv = {
   userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128.0.0.0 Safari/537.36',
@@ -69,7 +69,7 @@ describe('mobile device detection', () => {
   });
 });
 
-describe('mobile redirect opt-out', () => {
+describe('mobile full-site default behavior', () => {
   const IPHONE: MobileEnv = {
     ...DESKTOP,
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Mobile/15E148',
@@ -79,20 +79,14 @@ describe('mobile redirect opt-out', () => {
     innerWidth: 390,
   };
 
-  it('redirects mobile users landing on `/` with no opt-out', () => {
-    expect(hasFullSiteOptOut('')).toBe(false);
-    expect(shouldRedirectToMobile('', IPHONE)).toBe(true);
+  it('keeps mobile users on the full site instead of redirecting to a minimized view', () => {
+    expect(shouldRedirectToMobile('', IPHONE)).toBe(false);
     expect(shouldRedirectToMobile('', DESKTOP)).toBe(false);
-  });
-
-  it('respects `?view=full` and per-tab full-site preference without looping', () => {
     expect(hasFullSiteOptOut('?view=full')).toBe(true);
     expect(shouldRedirectToMobile('?view=full', IPHONE)).toBe(false);
+  });
 
-    rememberFullSitePreference();
-    expect(shouldRedirectToMobile('', IPHONE)).toBe(false);
-
-    clearFullSitePreference();
-    expect(shouldRedirectToMobile('', IPHONE)).toBe(true);
+  it('starts the full site with Floor 7 automatically selected', () => {
+    expect(DEFAULT_SELECTED_FLOOR).toBe(7);
   });
 });

@@ -1,5 +1,6 @@
 /**
- * Client-side mobile device detection and opt-out helpers for switching `/` to `/mobile`.
+ * Client-side mobile device detection helpers.
+ * Mobile visitors land directly on the full site (`/`) with a floor automatically selected.
  * Keeps zero cookies and zero persistent storage to match LUMEN's privacy commitments.
  */
 
@@ -65,8 +66,7 @@ export function isFullSitePreferred(): boolean {
   return fullSitePreferred;
 }
 
-/** Whether landing on `/` should automatically switch to `/mobile`. */
-export function shouldRedirectToMobile(search: string, env?: MobileEnv): boolean {
-  if (hasFullSiteOptOut(search) || fullSitePreferred) return false;
-  return env ? detectMobileDevice(env) : isMobileDevice();
+/** Mobile devices now open the full site directly instead of redirecting to a minimized `/mobile` view. */
+export function shouldRedirectToMobile(_search: string, _env?: MobileEnv): boolean {
+  return false;
 }

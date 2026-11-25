@@ -633,7 +633,7 @@ button:disabled {
   border: 0;
 }
 
-/* Phone width: the floor list and the floor details take turns, like the phone screens. */
+/* Phone width: keep the full site stacked cleanly with the selected floor details below the floor list. */
 @media (max-width: 639px) {
   .page {
     padding: 0 16px 40px;
@@ -649,9 +649,7 @@ button:disabled {
     border-radius: 18px !important;
   }
   .floor-detail {
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
+    padding: 16px !important;
   }
   .floor-detail .detail-title {
     font-size: 40px !important;

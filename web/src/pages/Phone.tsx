@@ -4,6 +4,7 @@ import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { PeakHoursCharts } from '../components/PeakHoursCharts';
 import { useFloors } from '../lib/floors';
+import { themeForFloor } from '../lib/floorThemes';
 import { useDocumentTitle, useNow } from '../lib/hooks';
 import { clearFullSitePreference, rememberFullSitePreference } from '../lib/mobile';
 import {
@@ -275,7 +276,7 @@ function PhoneDetail({
         </div>
       )}
       <PeakHoursCharts floor={f.n} seats={f.cap} compact />
-      <FloorPlan floor={f.n} compact />
+      <FloorPlan floor={f.n} liveFloor={f} compact theme={themeForFloor(f.n)} />
     </div>
   );
 }

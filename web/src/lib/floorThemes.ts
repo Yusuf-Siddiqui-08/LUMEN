@@ -280,10 +280,10 @@ export const FLOOR_THEMES: Record<number, FloorTheme> = {
     chartBadgeBg: '#162A22',
     plan: {
       containerBg: 'rgba(23, 44, 36, 0.82)',
-      plateBg: '#142720',
-      plateStroke: '#86EFAC',
-      elevatorBg: '#27473A',
-      elevatorStroke: '#86EFAC',
+      plateBg: '#162321',
+      plateStroke: '#F2B5D4',
+      elevatorBg: '#2B3A42',
+      elevatorStroke: '#F2B5D4',
       stairsBg: '#FDE68A',
       stairsText: '#231A08',
       kinds: {

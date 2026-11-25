@@ -393,7 +393,7 @@ export default function Home() {
 
                 <PeakHoursCharts floor={selected.n} seats={selected.cap} compact={isPhone} theme={theme} />
 
-                <FloorPlan floor={selected.n} compact={isPhone} theme={theme} />
+                <FloorPlan floor={selected.n} liveFloor={selected} compact={isPhone} theme={theme} />
               </div>
             </section>
           )}

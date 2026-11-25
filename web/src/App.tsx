@@ -1,7 +1,13 @@
 import { lazy, Suspense, useEffect } from 'react';
-import { Link, Route, Routes, useLocation } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { FloorsProvider } from './lib/floors';
 import { useDocumentTitle } from './lib/hooks';
+import {
+  hasFullSiteOptOut,
+  MOBILE_VIEWPORT_MAX_PX,
+  rememberFullSitePreference,
+  shouldRedirectToMobile,
+} from './lib/mobile';
 import FloorScreen from './pages/FloorScreen';
 import Home from './pages/Home';
 import Lobby from './pages/Lobby';
@@ -9,6 +15,35 @@ import Phone from './pages/Phone';
 
 // The hardware page is long and static: load it only when someone opens it.
 const Hardware = lazy(() => import('./pages/hardware/Hardware'));
+
+/** Home route that automatically switches mobile devices to `/mobile` unless `?view=full` was requested. */
+function HomeRoute() {
+  const { search } = useLocation();
+  const navigate = useNavigate();
+  const optedOut = hasFullSiteOptOut(search);
+
+  useEffect(() => {
+    if (optedOut) {
+      rememberFullSitePreference();
+      return;
+    }
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia(`(max-width: ${MOBILE_VIEWPORT_MAX_PX}px)`);
+    const check = () => {
+      if (shouldRedirectToMobile(window.location.search)) {
+        navigate('/mobile', { replace: true });
+      }
+    };
+    mq.addEventListener('change', check);
+    return () => mq.removeEventListener('change', check);
+  }, [optedOut, navigate]);
+
+  if (!optedOut && shouldRedirectToMobile(search)) {
+    return <Navigate to="/mobile" replace />;
+  }
+
+  return <Home />;
+}
 
 /** New page: start at the top, or at the #section in the URL once it has rendered. */
 function ScrollManager() {
@@ -53,7 +88,7 @@ export default function App() {
     <FloorsProvider>
       <ScrollManager />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomeRoute />} />
         <Route
           path="/hardware"
           element={
@@ -64,6 +99,7 @@ export default function App() {
         />
         <Route path="/lobby" element={<Lobby />} />
         <Route path="/floor/:n" element={<FloorScreen />} />
+        <Route path="/mobile" element={<Phone />} />
         <Route path="/phone" element={<Phone />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

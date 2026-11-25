@@ -88,11 +88,509 @@ button:disabled {
 }
 
 .lu-row {
-  transition: background-color 0.25s ease, border-color 0.25s ease;
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, filter 0.2s ease;
 }
 .lu-row:hover,
 .lu-card:hover {
   filter: brightness(1.12);
+}
+
+.floor-theme-pill,
+.floor-theme-cta {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease, filter 0.2s ease;
+}
+.floor-theme-pill:hover,
+.floor-theme-cta:hover {
+  filter: brightness(1.1);
+}
+
+/* Pause animations on hidden cross-fade layers so only the active floor animates. */
+.floor-backdrop-layer[data-active='false'],
+.floor-backdrop-layer[data-active='false'] * {
+  animation-play-state: paused !important;
+}
+
+@keyframes floorDrift {
+  0%,
+  100% {
+    transform: translateX(-16px);
+  }
+  50% {
+    transform: translateX(22px);
+  }
+}
+
+@keyframes floorCloudFar {
+  0%,
+  100% {
+    transform: translateX(18px);
+  }
+  50% {
+    transform: translateX(-24px);
+  }
+}
+
+@keyframes floorSunSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes floorSunPulse {
+  0%,
+  100% {
+    transform: scale(0.96);
+    opacity: 0.78;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+@keyframes floorBirdGlide {
+  0% {
+    transform: translate(-180px, 14px);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.92;
+  }
+  50% {
+    transform: translate(580px, -16px);
+    opacity: 0.95;
+  }
+  90% {
+    opacity: 0.88;
+  }
+  100% {
+    transform: translate(1340px, -4px);
+    opacity: 0;
+  }
+}
+
+@keyframes floorBirdGlideReverse {
+  0% {
+    transform: translate(1320px, 6px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.78;
+  }
+  50% {
+    transform: translate(560px, -18px);
+    opacity: 0.82;
+  }
+  90% {
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate(-200px, 10px);
+    opacity: 0;
+  }
+}
+
+@keyframes floorWingFlap {
+  0%,
+  100% {
+    transform: scaleY(1) translateY(0px);
+  }
+  50% {
+    transform: scaleY(0.42) translateY(1.8px);
+  }
+}
+
+@keyframes floorWaveSlide {
+  0%,
+  100% {
+    transform: translate(0px, 0px);
+  }
+  50% {
+    transform: translate(22px, 5px);
+  }
+}
+
+@keyframes floorWaveSwell {
+  0%,
+  100% {
+    transform: translate(0px, 0px);
+  }
+  50% {
+    transform: translate(-18px, 7px);
+  }
+}
+
+@keyframes floorFoamWash {
+  0%,
+  100% {
+    transform: translate(0px, 0px);
+    opacity: 0.65;
+  }
+  45% {
+    transform: translate(10px, 9px);
+    opacity: 0.95;
+  }
+  75% {
+    transform: translate(-6px, 3px);
+    opacity: 0.72;
+  }
+}
+
+@keyframes floorWaterGlint {
+  0%,
+  100% {
+    transform: scaleX(0.84);
+    opacity: 0.34;
+  }
+  50% {
+    transform: scaleX(1.16);
+    opacity: 0.88;
+  }
+}
+
+@keyframes floorWindStreak {
+  0% {
+    transform: translateX(-160px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.55;
+  }
+  70% {
+    opacity: 0.38;
+  }
+  100% {
+    transform: translateX(320px);
+    opacity: 0;
+  }
+}
+
+@keyframes floorTreeSway {
+  0%,
+  100% {
+    transform: rotate(-1.9deg);
+  }
+  50% {
+    transform: rotate(2.3deg);
+  }
+}
+
+@keyframes floorTreeSwayAlt {
+  0%,
+  100% {
+    transform: rotate(2.1deg);
+  }
+  50% {
+    transform: rotate(-1.7deg);
+  }
+}
+
+@keyframes floorPalmSway {
+  0%,
+  100% {
+    transform: rotate(-3.2deg);
+  }
+  50% {
+    transform: rotate(3.6deg);
+  }
+}
+
+@keyframes floorFlowerSway {
+  0%,
+  100% {
+    transform: rotate(-3.5deg);
+  }
+  50% {
+    transform: rotate(3.8deg);
+  }
+}
+
+@keyframes floorVineSway {
+  0%,
+  100% {
+    transform: rotate(-2.8deg);
+  }
+  50% {
+    transform: rotate(3.2deg);
+  }
+}
+
+@keyframes floorPetalFall {
+  0% {
+    transform: translate(0px, -30px) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(58px, 110px) rotate(120deg);
+    opacity: 0.8;
+  }
+  88% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(118px, 240px) rotate(240deg);
+    opacity: 0;
+  }
+}
+
+@keyframes floorFirefly {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(0.85);
+    opacity: 0.32;
+  }
+  25% {
+    transform: translate(14px, -12px) scale(1.15);
+    opacity: 0.95;
+  }
+  55% {
+    transform: translate(-10px, -22px) scale(0.95);
+    opacity: 0.55;
+  }
+  80% {
+    transform: translate(8px, -8px) scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+@keyframes floorEmberRise {
+  0% {
+    transform: translate(0px, 40px) scale(0.75);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.82;
+  }
+  70% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(28px, -140px) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes floorBeamBreath {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translateX(0px);
+  }
+  50% {
+    opacity: 0.95;
+    transform: translateX(10px);
+  }
+}
+
+@keyframes floorLampGlow {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes floorTrafficGlide {
+  0% {
+    transform: translateX(-180px);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.75;
+  }
+  85% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(1320px);
+    opacity: 0;
+  }
+}
+
+@keyframes floorBeaconPulse {
+  0%,
+  65%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  82% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+@keyframes floorTwinkle {
+  0%,
+  100% {
+    opacity: 0.52;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.floor-ambient-drift {
+  animation: floorDrift 22s ease-in-out infinite;
+}
+.floor-ambient-drift-slow {
+  animation: floorCloudFar 32s ease-in-out infinite;
+}
+.floor-ambient-twinkle {
+  animation: floorTwinkle 5.5s ease-in-out infinite;
+}
+.floor-sun-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorSunSpin 64s linear infinite;
+}
+.floor-sun-spin-slow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorSunSpin 96s linear infinite reverse;
+}
+.floor-sun-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorSunPulse 7s ease-in-out infinite;
+}
+.floor-bird-flock {
+  animation: floorBirdGlide 26s linear -10s infinite;
+}
+.floor-bird-flock-2 {
+  animation: floorBirdGlide 34s linear -21s infinite;
+}
+.floor-bird-flock-rev {
+  animation: floorBirdGlideReverse 30s linear -12s infinite;
+}
+.floor-wing {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorWingFlap 1.15s ease-in-out infinite;
+}
+.floor-wing-alt {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorWingFlap 1.35s ease-in-out -0.55s infinite;
+}
+.floor-wave-1 {
+  animation: floorWaveSlide 9s ease-in-out infinite;
+}
+.floor-wave-2 {
+  animation: floorWaveSwell 11.5s ease-in-out -3s infinite;
+}
+.floor-foam-wash {
+  animation: floorFoamWash 8.5s ease-in-out -2s infinite;
+}
+.floor-water-glint {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorWaterGlint 4.2s ease-in-out infinite;
+}
+.floor-water-glint-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorWaterGlint 5.4s ease-in-out -2.1s infinite;
+}
+.floor-wind {
+  animation: floorWindStreak 11s ease-in-out -3.5s infinite;
+}
+.floor-wind-2 {
+  animation: floorWindStreak 15s ease-in-out -8.5s infinite;
+}
+.floor-tree-sway {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: floorTreeSway 7.5s ease-in-out infinite;
+}
+.floor-tree-sway-alt {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: floorTreeSwayAlt 9.2s ease-in-out -2.4s infinite;
+}
+.floor-palm-left {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: floorPalmSway 6.8s ease-in-out infinite;
+}
+.floor-palm-right {
+  transform-box: fill-box;
+  transform-origin: right center;
+  animation: floorPalmSway 7.6s ease-in-out -3.1s infinite;
+}
+.floor-flower-sway {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: floorFlowerSway 5.8s ease-in-out infinite;
+}
+.floor-flower-sway-alt {
+  transform-box: fill-box;
+  transform-origin: bottom center;
+  animation: floorFlowerSway 6.9s ease-in-out -2.5s infinite;
+}
+.floor-vine-sway {
+  transform-box: fill-box;
+  transform-origin: top center;
+  animation: floorVineSway 6.4s ease-in-out infinite;
+}
+.floor-petal-fall {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorPetalFall 13s linear -4s infinite;
+}
+.floor-petal-fall-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorPetalFall 16s linear -9.5s infinite;
+}
+.floor-firefly {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorFirefly 8.5s ease-in-out infinite;
+}
+.floor-firefly-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorFirefly 10.5s ease-in-out -4.2s infinite;
+}
+.floor-ember {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorEmberRise 11s ease-in-out -3.5s infinite;
+}
+.floor-ember-2 {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorEmberRise 14s ease-in-out -8.2s infinite;
+}
+.floor-beam-breath {
+  animation: floorBeamBreath 9s ease-in-out infinite;
+}
+.floor-lamp-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorLampGlow 4.8s ease-in-out infinite;
+}
+.floor-traffic {
+  animation: floorTrafficGlide 14s linear -5s infinite;
+}
+.floor-traffic-2 {
+  animation: floorTrafficGlide 19s linear -11s infinite;
+}
+.floor-beacon {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: floorBeaconPulse 3.2s ease-in-out infinite;
 }
 
 .nav-link:hover {

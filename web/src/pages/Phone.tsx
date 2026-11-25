@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FloorPlan } from '../components/FloorPlan';
 import { LiveStatus } from '../components/LiveStatus';
 import { PeakHoursCharts } from '../components/PeakHoursCharts';
 import { useFloors } from '../lib/floors';
 import { useDocumentTitle, useNow } from '../lib/hooks';
+import { clearFullSitePreference, rememberFullSitePreference } from '../lib/mobile';
 import {
   type Floor,
   fmtClock,
@@ -30,6 +31,9 @@ const tile = { flex: 1, display: 'flex', flexDirection: 'column', gap: 6, paddin
 /** The phone flow from the prototype: pick a floor, then see its details. */
 export default function Phone() {
   useDocumentTitle('LUMEN on your phone');
+  useEffect(() => {
+    clearFullSitePreference();
+  }, []);
   const live = useFloors(5000);
   const clock = useNow(1000);
   const [sel, setSel] = useState<number | null>(null);
@@ -97,7 +101,11 @@ export default function Phone() {
                 <span style={{ fontSize: 28, fontWeight: 900, lineHeight: 1, color: GREEN }}>~1 min</span>
               </div>
             </div>
-            <Link to="/" style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', minHeight: 44, fontWeight: 700 }}>
+            <Link
+              to="/?view=full"
+              onClick={() => rememberFullSitePreference()}
+              style={{ alignSelf: 'center', display: 'inline-flex', alignItems: 'center', minHeight: 44, fontWeight: 700 }}
+            >
               Full site
             </Link>
           </div>

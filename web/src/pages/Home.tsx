@@ -507,7 +507,7 @@ export default function Home() {
               <ScreenCard to="/lobby" kicker="FLOOR 1 · BY THE ELEVATORS" title="Lobby display">
                 Every floor on one screen, with the elevator wait and a QR code.
               </ScreenCard>
-              <ScreenCard to="/phone" kicker="ANYWHERE · SCAN ONCE" title="On your phone">
+              <ScreenCard to="/mobile" kicker="ANYWHERE · SCAN ONCE" title="On your phone">
                 Pick a floor, then see seats, noise and zones before you leave class.
               </ScreenCard>
               <ScreenCard to="/floor/7" kicker="EVERY FLOOR" title="Floor screens">

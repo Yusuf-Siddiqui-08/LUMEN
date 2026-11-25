@@ -44,6 +44,7 @@ environment variable.
 lumen-site/
 ├── server/                 Node 22 + TypeScript backend
 │   ├── config/floors.json  floors 2 to 8: capacity, vibe, zones, gate + mic node IDs
+│   ├── scripts/            export-snapshots.mjs (SQLite snapshots -> CSV for MATLAB)
 │   ├── src/occupancy.ts    counting logic (running totals, baselines, reboots, staleness, noise median)
 │   ├── src/store.ts        live state per floor, API views
 │   ├── src/ingest.ts       MQTT topic + payload parsing
@@ -52,9 +53,16 @@ lumen-site/
 │   ├── src/api.ts          REST, SSE, serves the built web app
 │   ├── src/persistence.ts  saved gate baselines (JSON) + optional SQLite history
 │   └── test/               Vitest
+├── matlab/                 MATLAB analytics & plotting pipeline for both peak-hour graphs
+│   ├── run_lumen_peak_hours.m      entrypoint: compute datasets, export JSON & plot both graphs
+│   ├── load_lumen_snapshots.m      reads server/data/lumen.db (SQLite) or CSV logs
+│   ├── compute_peak_hours.m        hourly occupancy, energetic Leq, movmean trends, R^2 regression
+│   ├── export_peak_hours_json.m    writes web/src/data/peakHours.json
+│   ├── plot_peak_hours_graphs.m    plots Foot Traffic + Noise MATLAB figures to matlab/output/
+│   └── sample_snapshots.csv        5-weekday sample snapshot log (2,439 rows)
 ├── web/                    Vite + React + TypeScript + React Router
 │   ├── src/components/     floor plan, peak-hour charts, QR code, kiosk frame
-│   ├── src/data/           sample typical-weekday data (peakHours.json)
+│   ├── src/data/           MATLAB-generated typical-weekday data (peakHours.json)
 │   ├── src/pages/          Home, hardware/, Lobby, FloorScreen, Phone
 │   ├── src/lib/            logic (recommendation rule etc.), peak-hour helpers, live data hook
 │   └── test/
@@ -79,6 +87,7 @@ Open http://localhost:5173. Kiosk views: http://localhost:5173/lobby and http://
 | `npm test` | Vitest for the server and the web logic |
 | `npm start` | Production: the server serves the API and the built web app on one port |
 | `npm run start:sim` | Same as `npm start` with `SIMULATE=1` |
+| `npm run export:snapshots` | Export SQLite `snapshots` table to `matlab/snapshots.csv` for MATLAB |
 
 Production with simulated data:
 
@@ -138,24 +147,43 @@ noise_db   = median of the floor's mics' latest leq_db
 - **Recommendation** (web): the closest floor (lowest number) with at least 15 free seats, otherwise the
   matching floor with the most free seats. Stale floors are never recommended.
 
-## Peak hours data
+## Peak hours data (MATLAB pipeline)
 
-`web/src/data/peakHours.json` holds typical-weekday hourly foot traffic and noise levels from 7 AM to 11 PM for floors 2 to 8. It powers the two charts under the floor detail view on `/` and `/phone`, and is clearly labelled on screen as `"Typical weekday · sample data"`.
+`web/src/data/peakHours.json` holds typical-weekday hourly foot traffic and noise levels from 7 AM to 11 PM for floors 2 to 8, plus 3-hour moving-average trends and occupancy-vs-noise regression stats. It powers both charts under the floor detail view on `/` and `/phone`, and is clearly labelled on screen as `"Typical weekday · sample (MATLAB)"` (or `"Typical weekday · MATLAB measured"` once live logs are processed).
 
-The current values are made-up sample data (`"source": "sample"`), not measured sensor data. Later, a MATLAB script will compute real hourly averages from logged sensor history and regenerate `web/src/data/peakHours.json` in this exact shape:
+The `matlab/` pipeline ([`matlab/run_lumen_peak_hours.m`](matlab/run_lumen_peak_hours.m)) computes both datasets from snapshot logs (`server/data/lumen.db`, `matlab/snapshots.csv`, or the 5-weekday `matlab/sample_snapshots.csv`), generates **both MATLAB graphs** (Foot Traffic by Hour + Noise by Hour) in `matlab/output/`, and exports `web/src/data/peakHours.json`:
+
+```matlab
+run('matlab/run_lumen_peak_hours.m')
+```
+
+- **Graph 1 (Foot traffic):** weekday mean occupancy clamped to `[0, capacity]`, seat-availability color bars, capacity reference line, and 3-hour `movmean(..., 3)` trend.
+- **Graph 2 (Noise):** energetic equivalent sound level $L_{\text{eq}} = 10 \log_{10}(\text{mean}(10^{\text{dB}/10}))$ across `Quiet` (`<45 dB`), `Low chatter` (`45–60 dB`), and `Social` (`>60 dB`) bands, `movmean(..., 3)` trend, and traffic–noise linear regression ($R^2$, slope via `corrcoef` / `polyfit`).
+
+To export live SQLite snapshots to CSV for MATLAB Online or installs without Database Toolbox, run `npm run export:snapshots` before running `matlab/run_lumen_peak_hours.m`.
 
 ```json
 {
   "source": "sample",
-  "description": "Typical weekday, made-up sample data, not measured",
+  "description": "Typical weekday, sample sensor snapshot averages computed via MATLAB",
+  "pipeline": {
+    "engine": "MATLAB",
+    "script": "matlab/run_lumen_peak_hours.m",
+    "timezone": "America/Toronto",
+    "sample_count": 2380
+  },
   "hours": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
   "floors": {
-    "7": { "people": [3, 11, 22, ...], "noise_db": [34.4, 36.1, 38.2, ...] }
+    "7": {
+      "people": [3, 11, 22, ...],
+      "noise_db": [34.4, 36.1, 38.2, ...],
+      "matlab": { "trend_people": [...], "trend_noise_db": [...], "traffic_noise_r2": 0.991 }
+    }
   }
 }
 ```
 
-Each floor entry has 17 whole-number occupancy values (`people`) and 17 one-decimal decibel values (`noise_db`) matching the 17 hours in `hours`.
+Each floor entry has 17 whole-number occupancy values (`people`), 17 one-decimal energetic $L_{\text{eq}}$ decibel values (`noise_db`), and the MATLAB `movmean`/regression summary matching the 17 hours in `hours`.
 
 ## MQTT reference
 

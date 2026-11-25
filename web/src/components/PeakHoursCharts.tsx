@@ -579,7 +579,7 @@ export function PeakHoursCharts({
   theme?: FloorTheme;
 }) {
   const data = peakFor(floor);
-  if (!data) {
+  if (!data || data.people.length === 0 || data.noise_db.length === 0) {
     return (
       <section aria-label={`Floor ${floor} typical weekday charts`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <span style={monoLabel(12, theme ? theme.muted : MUTED)}>TYPICAL WEEKDAY · SAMPLE DATA</span>

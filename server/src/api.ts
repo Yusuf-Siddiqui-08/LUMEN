@@ -90,13 +90,25 @@ export function createApi(store: LumenStore, opts: ApiOptions = {}): Api {
 
   const frame = () => `event: floors\nid: ${++eventId}\ndata: ${JSON.stringify(store.payload())}\n\n`;
 
+  const send = (res: Response, chunk: string) => {
+    if (res.writableEnded || res.destroyed) {
+      clients.delete(res);
+      return;
+    }
+    try {
+      res.write(chunk);
+    } catch {
+      clients.delete(res);
+    }
+  };
+
   const broadcast = () => {
     pending = null;
     lastSent = Date.now();
     lastStaleKey = staleKey();
     if (clients.size === 0) return;
     const data = frame();
-    for (const res of clients) res.write(data);
+    for (const res of [...clients]) send(res, data);
   };
 
   const schedule = () => {
@@ -112,7 +124,9 @@ export function createApi(store: LumenStore, opts: ApiOptions = {}): Api {
     if (staleKey() !== lastStaleKey || Date.now() - lastSent >= keepaliveMs) schedule();
   }, 5000);
   const heartbeat = setInterval(() => {
-    for (const res of clients) res.write(`: heartbeat ${new Date().toISOString()}\n\n`);
+    if (clients.size === 0) return;
+    const beat = `: heartbeat ${new Date().toISOString()}\n\n`;
+    for (const res of [...clients]) send(res, beat);
   }, heartbeatMs);
 
   app.get('/api/stream', (req, res) => {
@@ -123,12 +137,13 @@ export function createApi(store: LumenStore, opts: ApiOptions = {}): Api {
       'X-Accel-Buffering': 'no',
       'Access-Control-Allow-Origin': '*',
     });
-    res.write('retry: 3000\n\n');
-    res.write(frame());
-    clients.add(res);
-    req.on('close', () => {
+    const cleanup = () => {
       clients.delete(res);
-    });
+    };
+    req.on('close', cleanup);
+    res.on('error', cleanup);
+    clients.add(res);
+    send(res, `retry: 3000\n\n${frame()}`);
   });
 
   app.use('/api', (_req, res) => {
@@ -173,7 +188,9 @@ export function createApi(store: LumenStore, opts: ApiOptions = {}): Api {
       clearInterval(heartbeat);
       if (pending) clearTimeout(pending);
       store.off('change', schedule);
-      for (const res of clients) res.end();
+      for (const res of [...clients]) {
+        if (!res.writableEnded && !res.destroyed) res.end();
+      }
       clients.clear();
     },
   };

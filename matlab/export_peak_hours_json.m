@@ -38,6 +38,14 @@ for idx = 1:nFloors
     entry = dataset.floorEntries{idx};
     m = entry.matlab;
 
+    if any(~isfinite(entry.people)) || any(~isfinite([ ...
+            m.peak_hour, m.peak_people, m.peak_utilization_pct, ...
+            m.quietest_hour, m.quietest_db, m.loudest_hour, m.loudest_db, ...
+            m.traffic_noise_r2, m.noise_slope_db_per_person]))
+        error('LUMEN:NonFiniteJsonValue', ...
+            'Floor %s contains non-finite values and cannot be encoded as valid JSON.', key);
+    end
+
     lines{end + 1} = sprintf('    "%s": {', key);
     lines{end + 1} = sprintf('      "people": %s,', jsonencode(entry.people));
     lines{end + 1} = sprintf('      "noise_db": %s,', formatOneDecimalJsonArray(entry.noise_db));
@@ -74,6 +82,9 @@ fprintf(fid, '%s\n', strjoin(lines, sprintf('\n')));
 end
 
 function txt = formatOneDecimalJsonArray(vec)
+if any(~isfinite(vec))
+    error('LUMEN:NonFiniteJsonValue', 'Cannot encode non-finite value into peakHours.json.');
+end
 parts = arrayfun(@(v) sprintf('%.1f', v), vec, 'UniformOutput', false);
 txt = ['[', strjoin(parts, ', '), ']'];
 end

@@ -22,7 +22,7 @@ function redact(url: string): string {
     if (u.password) u.password = '***';
     return u.toString();
   } catch {
-    return url;
+    return url.replace(/:\/\/[^?#]*@/, '://***@');
   }
 }
 

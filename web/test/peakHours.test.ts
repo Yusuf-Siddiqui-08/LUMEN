@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -93,7 +93,7 @@ describe('peak hours MATLAB dataset', () => {
   });
 
   it('matches the MATLAB aggregation math applied to matlab/sample_snapshots.csv', () => {
-    const csvPath = resolve(__dirname, '../../matlab/sample_snapshots.csv');
+    const csvPath = fileURLToPath(new URL('../../matlab/sample_snapshots.csv', import.meta.url));
     const lines = readFileSync(csvPath, 'utf8').trim().split('\n').slice(1);
 
     const buckets = new Map<string, { occ: number[]; db: number[] }>();

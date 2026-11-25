@@ -30,12 +30,24 @@ dtLocal = dtUtc;
 dtLocal.TimeZone = tz;
 localHour = hour(dtLocal);
 
-% Filter out weekends, stale sensor outages, and out-of-window hours.
+floorsList = floorsCfg.floors;
+nFloors = numel(floorsList);
+configuredFloors = zeros(1, nFloors);
+for fIdx = 1:nFloors
+    if iscell(floorsList)
+        configuredFloors(fIdx) = double(floorsList{fIdx}.floor);
+    else
+        configuredFloors(fIdx) = double(floorsList(fIdx).floor);
+    end
+end
+
+% Filter out weekends, stale sensor outages, unconfigured floors, and out-of-window hours.
 isValidRow = ~isnat(dtLocal) ...
     & ~isweekend(dtLocal) ...
     & (tbl.stale == 0) ...
     & ismember(localHour, targetHours) ...
     & isfinite(tbl.floor) ...
+    & ismember(tbl.floor, configuredFloors) ...
     & isfinite(tbl.on_floor);
 
 filteredTbl = tbl(isValidRow, :);
@@ -48,8 +60,6 @@ if isempty(filteredTbl)
 end
 
 nHours = numel(targetHours);
-floorsList = floorsCfg.floors;
-nFloors = numel(floorsList);
 
 floorKeys = cell(1, nFloors);
 floorEntries = cell(1, nFloors);
@@ -100,13 +110,21 @@ for fIdx = 1:nFloors
     end
 
     % Fill any sparse missing hour cleanly if working with partial real logs.
-    if any(isnan(people))
+    if all(isnan(people))
+        warning('LUMEN:MissingAllHourPeople', ...
+            'Floor %d has no valid occupancy samples; defaulting to 0.', fNum);
+        people = zeros(1, nHours);
+    elseif any(isnan(people))
         warning('LUMEN:MissingHourPeople', ...
             'Floor %d is missing %d hour bucket(s) for occupancy; interpolating.', ...
             fNum, sum(isnan(people)));
         people = round(min(cap, max(0, fillmissing(people, 'linear', 'EndValues', 'nearest'))));
     end
-    if any(isnan(noiseDb))
+    if all(isnan(noiseDb))
+        warning('LUMEN:MissingAllHourNoise', ...
+            'Floor %d has no valid noise_db samples; defaulting to 45.0 dB.', fNum);
+        noiseDb = repmat(45.0, 1, nHours);
+    elseif any(isnan(noiseDb))
         warning('LUMEN:MissingHourNoise', ...
             'Floor %d is missing %d hour bucket(s) for noise_db; interpolating.', ...
             fNum, sum(isnan(noiseDb)));

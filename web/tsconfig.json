@@ -10,7 +10,7 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src", "test", "vite.config.ts"]

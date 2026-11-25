@@ -112,6 +112,10 @@ if ~isempty(which('sqlite'))
 end
 
 % Fallback for MATLAB / MATLAB Online without Database Toolbox: sqlite3 CLI -> temp CSV.
+if ~isempty(regexp(dbPath, '["`$;&|\r\n]', 'once'))
+    error('LUMEN:UnsafeSqlitePath', ...
+        'Refusing to pass path with shell metacharacters to sqlite3 CLI: %s', dbPath);
+end
 tmpCsv = [tempname, '.csv'];
 cleanupFile = onCleanup(@() deleteIfExists(tmpCsv));
 cmd = sprintf('sqlite3 -header -csv "%s" "%s;" > "%s"', dbPath, sqlQuery, tmpCsv);

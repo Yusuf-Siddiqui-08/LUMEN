@@ -4,6 +4,7 @@ import { FloorsProvider } from './lib/floors';
 import { useDocumentTitle } from './lib/hooks';
 import {
   hasFullSiteOptOut,
+  MOBILE_TOUCH_MAX_PX,
   MOBILE_VIEWPORT_MAX_PX,
   rememberFullSitePreference,
   shouldRedirectToMobile,
@@ -28,14 +29,19 @@ function HomeRoute() {
       return;
     }
     if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia(`(max-width: ${MOBILE_VIEWPORT_MAX_PX}px)`);
+    const queries = [
+      window.matchMedia(`(max-width: ${MOBILE_VIEWPORT_MAX_PX}px)`),
+      window.matchMedia(`(max-width: ${MOBILE_TOUCH_MAX_PX}px)`),
+    ];
     const check = () => {
       if (shouldRedirectToMobile(window.location.search)) {
         navigate('/mobile', { replace: true });
       }
     };
-    mq.addEventListener('change', check);
-    return () => mq.removeEventListener('change', check);
+    for (const mq of queries) mq.addEventListener('change', check);
+    return () => {
+      for (const mq of queries) mq.removeEventListener('change', check);
+    };
   }, [optedOut, navigate]);
 
   if (!optedOut && shouldRedirectToMobile(search)) {
@@ -54,7 +60,12 @@ function ScrollManager() {
       return;
     }
     // Lazy pages render a moment later, so look for the target for up to 2 seconds.
-    const id = decodeURIComponent(hash.slice(1));
+    let id = hash.slice(1);
+    try {
+      id = decodeURIComponent(id);
+    } catch {
+      // Keep raw fragment if percent-encoding is malformed.
+    }
     let tries = 0;
     let timer = 0;
     const find = () => {
